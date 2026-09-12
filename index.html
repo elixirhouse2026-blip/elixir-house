@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Elixir House - Elegí tu aroma, nosotros hacemos el resto."
+    >
+
+    <meta
+        name="theme-color"
+        content="#080808"
+    >
+
+    <title>Elixir House | Perfumes</title>
+
+    <link rel="stylesheet" href="style.css">
+
+
+    <!-- FUENTES -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- ============================================
+         HEADER
+         ============================================ -->
+
+    <header class="header">
+
+        <a href="#inicio" class="logo">
+
+            <span>ELIXIR</span>
+
+            <small>HOUSE</small>
+
+        </a>
+
+
+        <nav class="nav" id="nav">
+
+            <a href="#inicio">
+                INICIO
+            </a>
+
+            <a href="#catalogo">
+                CATÁLOGO
+            </a>
+
+            <a
+                href="#catalogo"
+                class="gender-nav"
+                data-gender="Hombre"
+            >
+                HOMBRE
+            </a>
+
+            <a
+                href="#catalogo"
+                class="gender-nav"
+                data-gender="Mujer"
+            >
+                MUJER
+            </a>
+
+            <a
+                href="#premium"
+                class="premium-link"
+            >
+                PREMIUM
+            </a>
+
+        </nav>
+
+
+        <button
+            class="menu-btn"
+            id="menuBtn"
+            type="button"
+        >
+            ☰
+        </button>
+
+    </header>
+
+
+
+    <!-- ============================================
+         CONTENIDO
+         ============================================ -->
+
+    <main>
+
+
+        <!-- ============================================
+             HERO
+             ============================================ -->
+
+        <section
+            class="hero"
+            id="inicio"
+        >
+
+            <div class="hero-content">
+
+                <p class="hero-small">
+                    ELIXIR HOUSE
+                </p>
+
+
+                <h1>
+                    ELEGÍ TU
+                    <span>AROMA</span>
+                </h1>
+
+
+                <p class="hero-slogan">
+                    Nosotros hacemos el resto.
+                </p>
+
+
+                <p class="hero-description">
+                    Descubrí nuestra selección de fragancias
+                    y encontrá el perfume que representa tu esencia.
+                </p>
+
+
+                <a
+                    href="#catalogo"
+                    class="gold-button"
+                >
+                    EXPLORAR PERFUMES
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ============================================
+             CATEGORÍAS PRINCIPALES
+             ============================================ -->
+
+        <section class="categories">
+
+            <div class="section-title">
+
+                <p>
+                    DESCUBRÍ TU ESENCIA
+                </p>
+
+                <h2>
+                    NUESTRO CATÁLOGO
+                </h2>
+
+            </div>
+
+
+            <div class="category-grid">
+
+
+                <!-- HOMBRE -->
+
+                <a
+                    href="#catalogo"
+                    class="main-category"
+                    data-gender="Hombre"
+                >
+
+                    <div class="category-content">
+
+                        <span>
+                            FRAGANCIAS
+                        </span>
+
+                        <h3>
+                            HOMBRE
+                        </h3>
+
+                        <p>
+                            Descubrí nuestra selección masculina.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+
+                <!-- MUJER -->
+
+                <a
+                    href="#catalogo"
+                    class="main-category"
+                    data-gender="Mujer"
+                >
+
+                    <div class="category-content">
+
+                        <span>
+                            FRAGANCIAS
+                        </span>
+
+                        <h3>
+                            MUJER
+                        </h3>
+
+                        <p>
+                            Descubrí nuestra selección femenina.
+                        </p>
+
+                    </div>
+
+                </a>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ============================================
+             CATÁLOGO
+             ============================================ -->
+
+        <section
+            class="catalog-section"
+            id="catalogo"
+        >
+
+            <div class="section-title">
+
+                <p>
+                    ELIXIR HOUSE
+                </p>
+
+                <h2>
+                    PERFUMES
+                </h2>
+
+            </div>
+
+
+
+            <!-- ========================================
+                 SUBCATEGORÍAS
+                 ======================================== -->
+
+            <div
+                class="catalog-categories"
+                id="subcategoryButtons"
+            >
+
+                <button
+                    type="button"
+                    class="subcategory-button active"
+                    data-subcategory="todos"
+                >
+                    TODOS
+                </button>
+
+
+                <button
+                    type="button"
+                    class="subcategory-button"
+                    data-subcategory="Amaderados"
+                    data-gender="Hombre"
+                >
+                    AMADERADOS
+                </button>
+
+
+                <button
+                    type="button"
+                    class="subcategory-button"
+                    data-subcategory="Orientales"
+                    data-gender="Hombre"
+                >
+                    ORIENTALES
+                </button>
+
+
+                <button
+                    type="button"
+                    class="subcategory-button"
+                    data-subcategory="Citricos"
+                    data-gender="Hombre"
+                >
+                    CÍTRICOS
+                </button>
+
+
+                <button
+                    type="button"
+                    class="subcategory-button"
+                    data-subcategory="Florales"
+                    data-gender="Mujer"
+                >
+                    FLORALES
+                </button>
+
+
+                <button
+                    type="button"
+                    class="subcategory-button"
+                    data-subcategory="Dulces"
+                    data-gender="Mujer"
+                >
+                    DULCES
+                </button>
+
+
+                <button
+                    type="button"
+                    class="subcategory-button"
+                    data-subcategory="Frescos"
+                    data-gender="Mujer"
+                >
+                    FRESCOS
+                </button>
+
+            </div>
+
+
+
+            <!-- ========================================
+                 FILTROS
+                 ======================================== -->
+
+            <div class="filters">
+
+
+                <!-- BUSCADOR -->
+
+                <div class="search-box">
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Buscar perfume..."
+                    >
+
+                    <span>
+                        ⌕
+                    </span>
+
+                </div>
+
+
+
+                <!-- GÉNERO -->
+
+                <select id="genderFilter">
+
+                    <option value="todos">
+                        Todos
+                    </option>
+
+                    <option value="Hombre">
+                        Hombre
+                    </option>
+
+                    <option value="Mujer">
+                        Mujer
+                    </option>
+
+                </select>
+
+
+
+                <!-- CATEGORÍA -->
+
+                <select id="categoryFilter">
+
+                    <option value="todos">
+                        Todas las categorías
+                    </option>
+
+                </select>
+
+
+
+                <!-- MARCA -->
+
+                <select id="brandFilter">
+
+                    <option value="todos">
+                        Todas las marcas
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- ========================================
+                 CONTADOR
+                 ======================================== -->
+
+            <div class="catalog-info">
+
+                <span id="productCount">
+                    0 perfumes
+                </span>
+
+            </div>
+
+
+
+            <!-- ========================================
+                 PRODUCTOS NORMALES
+                 ======================================== -->
+
+            <div
+                class="products-grid"
+                id="productsGrid"
+            >
+            </div>
+
+
+
+            <!-- ========================================
+                 SIN RESULTADOS
+                 ======================================== -->
+
+            <div
+                class="no-results"
+                id="noResults"
+            >
+
+                <span>
+                    ✦
+                </span>
+
+                <h3>
+                    No encontramos perfumes
+                </h3>
+
+                <p>
+                    Probá cambiar los filtros
+                    o realizar otra búsqueda.
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ============================================
+             PREMIUM
+             ============================================ -->
+
+        <section
+            class="premium-section"
+            id="premium"
+        >
+
+            <div class="premium-title">
+
+                <p>
+                    ELIXIR HOUSE
+                </p>
+
+                <h2>
+                    COLECCIÓN
+                    <span>PREMIUM</span>
+                </h2>
+
+                <div class="ruby-line"></div>
+
+                <p class="premium-description">
+                    Fragancias seleccionadas para quienes
+                    buscan una experiencia diferente.
+                </p>
+
+            </div>
+
+
+            <div
+                class="products-grid premium-grid"
+                id="premiumGrid"
+            >
+            </div>
+
+        </section>
+
+
+
+        <!-- ============================================
+             NOSOTROS
+             ============================================ -->
+
+        <section class="about">
+
+            <div class="about-content">
+
+                <p class="section-label">
+                    SOBRE ELIXIR HOUSE
+                </p>
+
+                <h2>
+                    TU AROMA
+                    <span>HABLA DE VOS.</span>
+                </h2>
+
+                <p>
+                    Elegimos cada fragancia pensando en
+                    personas que buscan expresar su
+                    personalidad a través de un aroma único.
+                </p>
+
+                <p>
+                    Encontrá esa fragancia que te representa.
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ============================================
+             CONTACTO
+             ============================================ -->
+
+        <section class="contact">
+
+            <div class="section-title">
+
+                <p>
+                    ¿TENÉS ALGUNA CONSULTA?
+                </p>
+
+                <h2>
+                    CONTACTANOS
+                </h2>
+
+            </div>
+
+
+            <div class="contact-grid">
+
+
+                <div class="contact-card">
+
+                    <span>
+                       Whatsapp
+                    </span>
+
+                    <strong>
+                        +54 9 3516 16-3220
+                    </strong>
+
+                    <p>
+                        Consultas y pedidos.
+                    </p>
+
+                </div>
+
+
+
+                <div class="contact-card">
+
+                    <span>
+                        INSTAGRAM
+                    </span>
+
+                    <strong>
+                        @elixirrhouse_
+                    </strong>
+
+                    <p>
+                        Seguinos en nuestras redes.
+                    </p>
+
+                </div>
+
+
+
+                <div class="contact-card">
+
+                    <span>
+                        ATENCIÓN
+                    </span>
+
+                    <strong>
+                        Lunes a sábado
+                    </strong>
+
+                    <p>
+                        Consultá nuestros horarios.
+                    </p>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- ============================================
+         FOOTER
+         ============================================ -->
+
+    <footer class="footer">
+
+        <div class="footer-logo">
+            ELIXIR HOUSE
+        </div>
+
+        <p>
+            Elegí tu aroma, nosotros hacemos el resto.
+        </p>
+
+        <small>
+            © 2026 Elixir House
+        </small>
+
+    </footer>
+
+
+
+    <!-- ============================================
+         JAVASCRIPT
+         ============================================ -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>

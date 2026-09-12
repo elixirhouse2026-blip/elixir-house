@@ -1,0 +1,704 @@
+/* ============================================
+   ELIXIR HOUSE
+   PANEL ADMINISTRADOR
+============================================ */
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #242424 0%,
+            #0b0b0b 45%,
+            #050505 100%
+        );
+
+    color: #f5d77a;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* ============================================
+   UTILIDADES
+============================================ */
+
+.hidden {
+    display: none !important;
+}
+
+
+.message {
+    margin-top: 15px;
+
+    text-align: center;
+
+    font-size: 14px;
+}
+
+
+/* ============================================
+   LOGIN
+============================================ */
+
+.login-section {
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+}
+
+
+.login-box {
+    width: 100%;
+
+    max-width: 430px;
+
+    padding: 40px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #171717,
+            #090909
+        );
+
+    border: 1px solid #c9a227;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 0 40px rgba(201, 162, 39, 0.15);
+}
+
+
+.login-logo {
+    text-align: center;
+
+    font-size: 32px;
+
+    font-weight: 700;
+
+    letter-spacing: 4px;
+
+    color: #e7c65a;
+
+    margin-bottom: 8px;
+}
+
+
+.login-subtitle {
+    text-align: center;
+
+    color: #aaa;
+
+    margin-bottom: 30px;
+}
+
+
+.login-box label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #d8b94f;
+
+    font-size: 14px;
+}
+
+
+.login-box input {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    margin-bottom: 20px;
+
+    background: #111;
+
+    border: 1px solid #4d411f;
+
+    border-radius: 8px;
+
+    color: #fff;
+
+    outline: none;
+}
+
+
+.login-box input:focus {
+    border-color: #d8b94f;
+}
+
+
+.login-button {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #b88a18,
+            #f1d56a,
+            #b88a18
+        );
+
+    color: #080808;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.login-button:hover {
+    transform: translateY(-1px);
+}
+
+
+/* ============================================
+   HEADER
+============================================ */
+
+.admin-header {
+    min-height: 90px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 20px 5%;
+
+    border-bottom: 1px solid #3e3215;
+
+    background: #090909;
+}
+
+
+.admin-header h1 {
+    color: #e7c65a;
+
+    letter-spacing: 3px;
+
+    font-size: 25px;
+}
+
+
+.admin-header p {
+    margin-top: 5px;
+
+    color: #999;
+}
+
+
+.logout-button {
+    padding: 11px 18px;
+
+    background: transparent;
+
+    border: 1px solid #9c7b20;
+
+    color: #e7c65a;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+}
+
+
+.logout-button:hover {
+    background: #b18a20;
+
+    color: #080808;
+}
+
+
+/* ============================================
+   CONTAINER
+============================================ */
+
+.admin-container {
+    width: 90%;
+
+    max-width: 1400px;
+
+    margin: 35px auto;
+}
+
+
+/* ============================================
+   ESTADÍSTICAS
+============================================ */
+
+.stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+
+.stat-card {
+    padding: 25px;
+
+    background: #111;
+
+    border: 1px solid #3f3315;
+
+    border-radius: 12px;
+}
+
+
+.stat-card span {
+    display: block;
+
+    color: #999;
+
+    font-size: 13px;
+
+    margin-bottom: 8px;
+}
+
+
+.stat-card strong {
+    font-size: 30px;
+
+    color: #e7c65a;
+}
+
+
+.premium-stat {
+    border-color: #651d2c;
+}
+
+
+.premium-stat strong {
+    color: #d75b72;
+}
+
+
+/* ============================================
+   ACCIONES
+============================================ */
+
+.admin-actions {
+    margin-bottom: 25px;
+}
+
+
+.primary-button {
+    padding: 13px 22px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #b88a18,
+            #efd366
+        );
+
+    color: #090909;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+/* ============================================
+   FORMULARIO
+============================================ */
+
+.form-section {
+    margin-bottom: 35px;
+
+    padding: 28px;
+
+    background: #111;
+
+    border: 1px solid #5d4817;
+
+    border-radius: 14px;
+}
+
+
+.section-title {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 25px;
+}
+
+
+.section-title h2 {
+    color: #e7c65a;
+
+    font-size: 20px;
+}
+
+
+.close-button {
+    background: transparent;
+
+    border: none;
+
+    color: #aaa;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+
+#perfumeForm {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 20px;
+}
+
+
+.form-group {
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+
+.form-group label {
+    margin-bottom: 8px;
+
+    color: #d9ba51;
+
+    font-size: 14px;
+}
+
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+#adminSearch {
+    width: 100%;
+
+    padding: 12px;
+
+    background: #090909;
+
+    border: 1px solid #403518;
+
+    border-radius: 7px;
+
+    color: #fff;
+
+    outline: none;
+}
+
+
+.form-group textarea {
+    resize: vertical;
+}
+
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+#adminSearch:focus {
+    border-color: #c7a52f;
+}
+
+
+.form-group small {
+    margin-top: 7px;
+
+    color: #777;
+}
+
+
+.checkbox-container {
+    grid-column: 1 / -1;
+
+    display: flex;
+
+    gap: 30px;
+
+    padding: 10px 0;
+}
+
+
+.checkbox-label {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    color: #ddd;
+
+    cursor: pointer;
+}
+
+
+.checkbox-label input {
+    accent-color: #d1ad3e;
+}
+
+
+.save-button {
+    grid-column: 1 / -1;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #b88a18,
+            #efd366,
+            #b88a18
+        );
+
+    color: #080808;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+
+/* ============================================
+   PRODUCTOS
+============================================ */
+
+.products-section {
+    padding: 28px;
+
+    background: #0f0f0f;
+
+    border: 1px solid #29220f;
+
+    border-radius: 14px;
+}
+
+
+.products-section
+.section-title {
+    flex-wrap: wrap;
+}
+
+
+#adminSearch {
+    max-width: 300px;
+}
+
+
+.admin-products {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(280px, 1fr)
+        );
+
+    gap: 20px;
+}
+
+
+.admin-product {
+    padding: 18px;
+
+    background: #151515;
+
+    border: 1px solid #403518;
+
+    border-radius: 10px;
+}
+
+
+.admin-product.premium {
+    border-color: #722438;
+}
+
+
+.admin-product h3 {
+    color: #f0d46a;
+
+    margin-bottom: 8px;
+}
+
+
+.admin-product p {
+    color: #999;
+
+    margin-bottom: 6px;
+
+    font-size: 14px;
+}
+
+
+.admin-product-price {
+    color: #fff;
+
+    font-size: 20px;
+
+    font-weight: bold;
+
+    margin: 12px 0;
+}
+
+
+.admin-product-status {
+    font-size: 12px;
+
+    margin-bottom: 15px;
+}
+
+
+.status-stock {
+    color: #65c77a;
+}
+
+
+.status-no-stock {
+    color: #d65a67;
+}
+
+
+.product-actions {
+    display: flex;
+
+    gap: 10px;
+}
+
+
+.product-actions button {
+    flex: 1;
+
+    padding: 9px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+
+.edit-button {
+    background: transparent;
+
+    border: 1px solid #b49432;
+
+    color: #dfc35b;
+}
+
+
+.delete-button {
+    background: transparent;
+
+    border: 1px solid #742536;
+
+    color: #dc6176;
+}
+
+
+/* ============================================
+   RESPONSIVE
+============================================ */
+
+@media (max-width: 700px) {
+
+    .admin-header {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+    }
+
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+
+    #perfumeForm {
+        grid-template-columns: 1fr;
+    }
+
+
+    .form-group.full-width {
+        grid-column: auto;
+    }
+
+
+    .checkbox-container {
+        grid-column: auto;
+
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+
+    .save-button {
+        grid-column: auto;
+    }
+
+
+    .section-title {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    #adminSearch {
+        max-width: 100%;
+    }
+
+}
