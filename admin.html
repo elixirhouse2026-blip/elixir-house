@@ -12,10 +12,8 @@
 
     <title>Elixir House | Administración</title>
 
-    <link
-        rel="stylesheet"
-        href="admin.css"
-    >
+    <link rel="stylesheet" href="admin.css">
+    <link rel="icon" type="image/jpeg" href="logo-elixir-house.jpeg">
 
 </head>
 
@@ -177,7 +175,74 @@
 
             </section>
 
+            <section class="stats stats-extra">
+                <div class="stat-card"><span>MARCA</span><strong id="totalBrands">0</strong></div>
+                <div class="stat-card"><span>CATEGORÍAS</span><strong id="totalCategories">0</strong></div>
+                <div class="stat-card"><span>REGISTROS</span><strong id="totalSales">0</strong></div>
+                <div class="stat-card"><span>VALOR REGISTRADO</span><strong id="totalSalesValue">$0</strong></div>
+            </section>
 
+
+
+            <!-- =====================================
+                 VENDEDORES
+            ====================================== -->
+
+            <section class="seller-stats-section">
+
+                <div class="section-title seller-section-heading">
+                    <div>
+                        <span class="seller-section-label">PUNTOS DE VENTA</span>
+                        <h2>VENDEDORES</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="refreshSellerStats"
+                        class="secondary-button"
+                    >
+                        ACTUALIZAR
+                    </button>
+                </div>
+
+                <div
+                    id="sellerStats"
+                    class="seller-stats-grid"
+                ></div>
+
+                <p
+                    id="sellerStatsMessage"
+                    class="seller-stats-message"
+                ></p>
+
+            </section>
+
+
+            <!-- =====================================
+                 HISTORIAL DE REGISTROS
+            ====================================== -->
+            <section class="history-section">
+                <div class="section-title seller-section-heading">
+                    <div>
+                        <span class="seller-section-label">ACTIVIDAD</span>
+                        <h2>HISTORIAL</h2>
+                    </div>
+                    <button type="button" id="refreshSales" class="secondary-button">ACTUALIZAR</button>
+                </div>
+                <div class="history-filters">
+                    <label>DESDE <input type="date" id="salesDateFrom"></label>
+                    <label>HASTA <input type="date" id="salesDateTo"></label>
+                    <select id="salesSellerFilter"><option value="todos">Todos los vendedores</option></select>
+                    <button type="button" id="clearSalesFilters" class="secondary-button">LIMPIAR</button>
+                </div>
+                <div class="history-table-wrap">
+                    <table class="history-table">
+                        <thead><tr><th>FECHA</th><th>VENDEDOR</th><th>PERFUME</th><th>PRECIO</th><th>ACCIÓN</th></tr></thead>
+                        <tbody id="salesHistoryBody"></tbody>
+                    </table>
+                </div>
+                <p id="salesHistoryMessage" class="seller-stats-message"></p>
+            </section>
 
             <!-- ACCIONES -->
 
@@ -489,20 +554,16 @@
                             </div>
 
 
-                            <button
-                                type="submit"
-                                class="primary-button"
-                            >
+                            <button id="brandSubmitButton" type="submit" class="primary-button">
                                 + AGREGAR MARCA
                             </button>
+                            <button id="brandCancelEdit" type="button" class="secondary-button hidden">CANCELAR EDICIÓN</button>
 
                         </form>
 
 
-                        <div
-                            id="brandsList"
-                            class="management-list"
-                        ></div>
+                        <p class="management-help">Podés editar o eliminar marcas. Si una marca está siendo usada por un perfume, el sistema impedirá eliminarla para proteger el catálogo.</p>
+                        <div id="brandsList" class="management-list"></div>
 
                     </div>
 
@@ -569,20 +630,16 @@
                             </div>
 
 
-                            <button
-                                type="submit"
-                                class="primary-button"
-                            >
+                            <button id="categorySubmitButton" type="submit" class="primary-button">
                                 + AGREGAR CATEGORÍA
                             </button>
+                            <button id="categoryCancelEdit" type="button" class="secondary-button hidden">CANCELAR EDICIÓN</button>
 
                         </form>
 
 
-                        <div
-                            id="categoriesList"
-                            class="management-list"
-                        ></div>
+                        <p class="management-help">Las categorías se administran por género. Si una categoría está en uso, primero reasigná esos perfumes.</p>
+                        <div id="categoriesList" class="management-list"></div>
 
                     </div>
 
@@ -617,6 +674,7 @@
             </section>
 
 
+            <div class="admin-footer-note">Elixir House · Panel privado · Los cambios del catálogo se guardan en Supabase.</div>
         </main>
 
     </section>
@@ -634,7 +692,6 @@
     <script src="supabase.js"></script>
 
     <script src="admin.js"></script>
-
 
 </body>
 

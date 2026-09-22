@@ -23,6 +23,10 @@
     <title>Elixir House | Perfumes</title>
 
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Elixir House">
 
 
     <!-- FUENTES -->
@@ -40,6 +44,8 @@
         rel="stylesheet"
     >
 
+<link rel="icon" type="image/jpeg" href="logo-elixir-house.jpeg">
+
 </head>
 
 
@@ -54,9 +60,11 @@
 
         <a href="#inicio" class="logo">
 
-            <span>ELIXIR</span>
-
-            <small>HOUSE</small>
+            <img
+                src="logo-elixir-house.jpeg"
+                alt="Elixir House"
+                class="logo-image"
+            >
 
         </a>
 
@@ -276,75 +284,9 @@
                 class="catalog-categories"
                 id="subcategoryButtons"
             >
-
-                <button
-                    type="button"
-                    class="subcategory-button active"
-                    data-subcategory="todos"
-                >
+                <button type="button" class="subcategory-button active" data-subcategory="todos">
                     TODOS
                 </button>
-
-
-                <button
-                    type="button"
-                    class="subcategory-button"
-                    data-subcategory="Amaderados"
-                    data-gender="Hombre"
-                >
-                    AMADERADOS
-                </button>
-
-
-                <button
-                    type="button"
-                    class="subcategory-button"
-                    data-subcategory="Orientales"
-                    data-gender="Hombre"
-                >
-                    ORIENTALES
-                </button>
-
-
-                <button
-                    type="button"
-                    class="subcategory-button"
-                    data-subcategory="Citricos"
-                    data-gender="Hombre"
-                >
-                    CÍTRICOS
-                </button>
-
-
-                <button
-                    type="button"
-                    class="subcategory-button"
-                    data-subcategory="Florales"
-                    data-gender="Mujer"
-                >
-                    FLORALES
-                </button>
-
-
-                <button
-                    type="button"
-                    class="subcategory-button"
-                    data-subcategory="Dulces"
-                    data-gender="Mujer"
-                >
-                    DULCES
-                </button>
-
-
-                <button
-                    type="button"
-                    class="subcategory-button"
-                    data-subcategory="Frescos"
-                    data-gender="Mujer"
-                >
-                    FRESCOS
-                </button>
-
             </div>
 
 
@@ -418,6 +360,22 @@
 
             </div>
 
+            <div class="catalog-tools">
+                <div class="sort-box">
+                    <label for="sortFilter">ORDENAR</label>
+                    <select id="sortFilter">
+                        <option value="recent">Más recientes</option>
+                        <option value="name-asc">Nombre A → Z</option>
+                        <option value="name-desc">Nombre Z → A</option>
+                        <option value="price-asc">Precio menor → mayor</option>
+                        <option value="price-desc">Precio mayor → menor</option>
+                    </select>
+                </div>
+                <button type="button" id="favoritesToggle" class="favorites-toggle">
+                    ♡ MIS FAVORITOS <span id="favoritesCount">0</span>
+                </button>
+            </div>
+
 
 
             <!-- ========================================
@@ -425,11 +383,8 @@
                  ======================================== -->
 
             <div class="catalog-info">
-
-                <span id="productCount">
-                    0 perfumes
-                </span>
-
+                <span id="productCount">0 perfumes</span>
+                <span class="catalog-hint">Tocá una tarjeta para ver todos los detalles</span>
             </div>
 
 
@@ -572,16 +527,24 @@
                 <div class="contact-card">
 
                     <span>
-                       Whatsapp
+                        WHATSAPP
                     </span>
 
                     <strong>
-                        +54 9 3516 16-3220
+                        CONTACTANOS
                     </strong>
 
                     <p>
-                        Consultas y pedidos.
+                        Elegí con cuál de nuestros vendedores querés comunicarte.
                     </p>
+
+                    <button
+                        type="button"
+                        class="contact-action"
+                        id="footerWhatsappButton"
+                    >
+                        WHATSAPP
+                    </button>
 
                 </div>
 
@@ -600,6 +563,15 @@
                     <p>
                         Seguinos en nuestras redes.
                     </p>
+
+                    <a
+                        href="https://www.instagram.com/elixirrhouse_?stkn=dXpvYWVla285cXk4"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="contact-action"
+                    >
+                        VER INSTAGRAM
+                    </a>
 
                 </div>
 
@@ -627,8 +599,44 @@
         </section>
 
 
+        <!-- VISTOS RECIENTEMENTE -->
+        <section class="recent-section" id="recentSection" hidden>
+            <div class="section-title">
+                <p>PARA VOS</p>
+                <h2>VISTOS RECIENTEMENTE</h2>
+            </div>
+            <div class="recent-grid" id="recentGrid"></div>
+        </section>
+
     </main>
 
+    <!-- BARRA MÓVIL -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navegación rápida">
+        <a href="#inicio">⌂<span>Inicio</span></a>
+        <a href="#catalogo">⌕<span>Buscar</span></a>
+        <button type="button" id="mobileFavoritesButton">♡<span>Favoritos</span><b id="mobileFavoritesCount">0</b></button>
+        <button type="button" id="mobileWhatsappButton">◉<span>WhatsApp</span></button>
+    </nav>
+
+    <!-- BARRA DE COMPARACIÓN -->
+    <div class="compare-bar hidden" id="compareBar">
+        <div><strong id="compareCount">0</strong> perfumes seleccionados para comparar</div>
+        <div class="compare-bar-actions">
+            <button type="button" id="clearCompare">LIMPIAR</button>
+            <button type="button" id="openCompare">COMPARAR</button>
+        </div>
+    </div>
+
+    <!-- MODAL COMPARACIÓN -->
+    <div class="compare-modal hidden" id="compareModal" aria-hidden="true">
+        <div class="compare-backdrop"></div>
+        <div class="compare-box" role="dialog" aria-modal="true">
+            <button type="button" class="compare-close" id="closeCompare">✕</button>
+            <span class="product-modal-gender">COMPARACIÓN</span>
+            <h2>COMPARÁ TUS AROMAS</h2>
+            <div id="compareContent" class="compare-content"></div>
+        </div>
+    </div>
 
 
     <!-- ============================================
@@ -638,18 +646,127 @@
     <footer class="footer">
 
         <div class="footer-logo">
-            ELIXIR HOUSE
+            <img
+                src="logo-elixir-house.jpeg"
+                alt="Elixir House"
+                class="footer-logo-image"
+            >
         </div>
 
         <p>
             Elegí tu aroma, nosotros hacemos el resto.
         </p>
 
+        <div class="footer-socials">
+
+            <button
+                type="button"
+                class="social-button whatsapp-social"
+                id="footerWhatsappButtonBottom"
+                aria-label="Contactar por WhatsApp"
+            >
+                WHATSAPP
+            </button>
+
+            <a
+                href="https://www.instagram.com/elixirrhouse_?stkn=dXpvYWVla285cXk4"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-button instagram-social"
+            >
+                INSTAGRAM
+            </a>
+
+        </div>
+
         <small>
             © 2026 Elixir House
         </small>
 
     </footer>
+
+
+    <!-- ============================================
+         VISTA AMPLIADA DEL PERFUME
+         ============================================ -->
+
+    <div
+        id="productModal"
+        class="product-modal hidden"
+        aria-hidden="true"
+    >
+
+        <div class="product-modal-backdrop"></div>
+
+        <div
+            class="product-modal-box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productModalTitle"
+        >
+
+            <button
+                type="button"
+                id="closeProductModal"
+                class="product-modal-close"
+                aria-label="Cerrar"
+            >
+                ✕
+            </button>
+
+            <div id="productModalContent"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================
+         SELECTOR DE VENDEDOR
+         ============================================ -->
+
+    <div
+        id="sellerModal"
+        class="seller-modal hidden"
+        aria-hidden="true"
+    >
+
+        <div class="seller-modal-backdrop"></div>
+
+        <div
+            class="seller-modal-box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sellerModalTitle"
+        >
+
+            <button
+                type="button"
+                id="closeSellerModal"
+                class="seller-modal-close"
+                aria-label="Cerrar"
+            >
+                ✕
+            </button>
+
+            <span class="seller-modal-label">WHATSAPP</span>
+
+            <h2 id="sellerModalTitle">
+                ¿Por cuál de nuestros vendedores viniste a comprar?
+            </h2>
+
+            <p id="sellerModalText">
+                Elegí uno para continuar con WhatsApp.
+            </p>
+
+            <div
+                id="sellerOptions"
+                class="seller-options"
+            ></div>
+
+        </div>
+
+    </div>
 
 
 
@@ -662,6 +779,15 @@
 <script src="supabase.js"></script>
 
 <script src="script.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js").catch(function (error) {
+            console.warn("Service Worker no disponible:", error);
+        });
+    });
+}
+</script>
 
 </body>
 

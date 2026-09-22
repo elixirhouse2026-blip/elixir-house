@@ -702,3 +702,367 @@ body {
     }
 
 }
+
+/* ============================================
+   VENDEDORES / PUNTOS
+   ============================================ */
+
+.seller-stats-section {
+    margin-top: 28px;
+    padding: 28px;
+    background: rgba(12, 12, 12, 0.88);
+    border: 1px solid #2a2414;
+    border-radius: 14px;
+}
+
+.seller-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.seller-section-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #a78b32;
+    font-size: 10px;
+    letter-spacing: 3px;
+}
+
+.seller-section-heading h2 {
+    margin: 0;
+}
+
+.secondary-button {
+    padding: 10px 15px;
+    border: 1px solid #4d411f;
+    border-radius: 7px;
+    background: #111;
+    color: #d8b94f;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.secondary-button:hover {
+    border-color: #d8b94f;
+}
+
+.seller-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.seller-stat-card {
+    padding: 22px;
+    background: linear-gradient(145deg, #171717, #0b0b0b);
+    border: 1px solid #342a11;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.seller-stat-label {
+    display: block;
+    color: #888;
+    font-size: 9px;
+    letter-spacing: 2px;
+}
+
+.seller-stat-card h3 {
+    margin-top: 7px;
+    color: #f1d56a;
+    font-family: Georgia, serif;
+    font-size: 27px;
+    font-weight: 500;
+}
+
+.seller-stat-card strong {
+    display: block;
+    margin-top: 12px;
+    color: #fff;
+    font-size: 42px;
+    line-height: 1;
+}
+
+.seller-stat-points {
+    display: block;
+    margin-top: 8px;
+    color: #d8b94f;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+}
+
+.seller-stat-phone {
+    display: block;
+    margin-top: 12px;
+    color: #777;
+    font-size: 11px;
+}
+
+.seller-stats-message {
+    margin-top: 14px;
+    color: #777;
+    font-size: 12px;
+    text-align: center;
+}
+
+@media (max-width: 800px) {
+    .seller-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seller-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
+/* ============================================
+   ELIXIR HOUSE - DASHBOARD / GESTIÓN
+============================================ */
+
+.stats-extra {
+    margin-top: 14px;
+}
+
+.stats-extra .stat-card strong {
+    font-size: 25px;
+}
+
+.history-section {
+    margin: 35px 0;
+    padding: 26px;
+    border: 1px solid rgba(212,175,55,.15);
+    border-radius: 14px;
+    background: rgba(17,17,17,.72);
+}
+
+.history-filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin: 20px 0;
+}
+
+.history-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #aaa;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.history-filters input,
+.history-filters select {
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #4d411f;
+    background: #0b0b0b;
+    color: #fff;
+}
+
+.history-table-wrap {
+    overflow-x: auto;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 10px;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 620px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 13px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.history-table th {
+    color: var(--gold-light, #f5d76e);
+    font-size: 9px;
+    letter-spacing: 1.4px;
+}
+
+.history-table td {
+    color: #ddd;
+    font-size: 12px;
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.history-empty,
+.empty-management {
+    color: #777;
+    padding: 22px !important;
+    text-align: center !important;
+}
+
+.management-help {
+    color: #777;
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 14px 0;
+}
+
+.management-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(212,175,55,.12);
+    border-radius: 9px;
+    background: #0c0c0c;
+}
+
+.management-item strong {
+    display: block;
+    color: #f3d66e;
+    font-size: 13px;
+}
+
+.management-item span {
+    display: block;
+    color: #777;
+    font-size: 10px;
+    margin-top: 4px;
+}
+
+.management-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.management-actions button {
+    border-radius: 7px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .8px;
+}
+
+.edit-management {
+    border: 1px solid #8f7420;
+    background: transparent;
+    color: #e7c65a;
+}
+
+.delete-management {
+    border: 1px solid #7e2630;
+    background: transparent;
+    color: #e88995;
+}
+
+.delete-management:hover:not(:disabled) {
+    background: #7e2630;
+    color: #fff;
+}
+
+.delete-management:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.secondary-button.hidden,
+.hidden {
+    display: none !important;
+}
+
+.admin-product {
+    display: flex;
+    gap: 18px;
+}
+
+.admin-product-image {
+    width: 125px;
+    min-width: 125px;
+    height: 155px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #080808;
+    border: 1px solid rgba(212,175,55,.12);
+}
+
+.admin-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-product-image span {
+    color: #8b762e;
+    font-family: Georgia, serif;
+    letter-spacing: 2px;
+}
+
+.admin-product-info {
+    flex: 1;
+}
+
+.admin-premium-badge {
+    color: #d95768;
+    margin-left: 10px;
+}
+
+.admin-footer-note {
+    margin-top: 40px;
+    padding: 18px 0 5px;
+    text-align: center;
+    color: #555;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 700px) {
+    .history-section {
+        padding: 16px;
+    }
+
+    .management-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .management-actions {
+        width: 100%;
+    }
+
+    .management-actions button {
+        flex: 1;
+    }
+
+    .admin-product {
+        flex-direction: column;
+    }
+
+    .admin-product-image {
+        width: 100%;
+        height: 210px;
+    }
+
+    .history-filters > * {
+        width: 100%;
+    }
+}
+
+/* ==========================================================
+   SEGURIDAD + HISTORIAL
+   ========================================================== */
+.history-table th:last-child,.history-table td:last-child{text-align:center}.delete-sale-button{border:1px solid rgba(193,18,47,.6);background:rgba(139,0,21,.12);color:#ff8b98;padding:7px 9px;border-radius:5px;font-size:9px;font-weight:800;letter-spacing:.8px;cursor:pointer;transition:.2s}.delete-sale-button:hover{background:#8b0015;color:#fff}.admin-modal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px}.admin-modal.hidden{display:none}.admin-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(7px)}.admin-modal-box{position:relative;width:min(460px,100%);background:#111;border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.7)}.admin-modal-close{position:absolute;right:16px;top:14px;background:transparent;border:0;color:#fff;font-size:19px;cursor:pointer}.admin-modal-label{display:block;color:#d65a67;font-size:10px;letter-spacing:2px;font-weight:800;margin-bottom:8px}.admin-modal-box h2{font-family:'Cormorant Garamond',serif;color:#f5d76e;font-size:32px;margin-bottom:10px}.admin-modal-box p{color:#aaa;font-size:12px;line-height:1.7;margin-bottom:18px}.admin-modal-box input{width:100%;padding:13px 14px;background:#090909;border:1px solid rgba(212,175,55,.25);color:#fff;border-radius:6px;outline:none;margin-bottom:12px}.danger-button{width:100%;padding:13px;border:1px solid #c1122f;background:#8b0015;color:#fff;border-radius:6px;font-weight:800;letter-spacing:1px;cursor:pointer}.danger-button:disabled{opacity:.6;cursor:wait}

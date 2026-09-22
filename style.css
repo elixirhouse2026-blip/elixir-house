@@ -2346,3 +2346,619 @@ select {
     }
 
 }
+
+/* ============================================
+   LOGO ELIXIR HOUSE
+   ============================================ */
+
+.logo-image {
+    width: 62px;
+    height: 62px;
+    object-fit: contain;
+    display: block;
+    border-radius: 8px;
+}
+
+.footer-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer-logo-image {
+    width: 105px;
+    height: 105px;
+    object-fit: contain;
+    border-radius: 12px;
+    display: block;
+}
+
+.contact-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;
+    padding: 12px 22px;
+    min-width: 155px;
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--gold-light);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.contact-action:hover {
+    background: var(--gold);
+    color: #080808;
+    transform: translateY(-2px);
+}
+
+.footer-socials {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.social-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 145px;
+    padding: 11px 18px;
+    border: 1px solid rgba(212, 175, 55, 0.65);
+    background: transparent;
+    color: var(--gold-light);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.social-button:hover {
+    background: var(--gold);
+    color: #080808;
+}
+
+.instagram-social {
+    border-color: rgba(225, 48, 108, 0.75);
+}
+
+.instagram-social:hover {
+    background: #e1306c;
+    color: #fff;
+    border-color: #e1306c;
+}
+
+/* ============================================
+   SELECTOR DE VENDEDOR
+   ============================================ */
+
+.modal-open {
+    overflow: hidden;
+}
+
+.seller-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.seller-modal.hidden {
+    display: none;
+}
+
+.seller-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(7px);
+}
+
+.seller-modal-box {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    padding: 38px 30px 30px;
+    background: linear-gradient(145deg, #171717, #080808);
+    border: 1px solid rgba(212, 175, 55, 0.65);
+    box-shadow: 0 0 45px rgba(212, 175, 55, 0.14);
+    text-align: center;
+    z-index: 1;
+}
+
+.seller-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #333;
+    background: #101010;
+    color: #aaa;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.seller-modal-label {
+    color: var(--gold);
+    font-size: 9px;
+    letter-spacing: 3px;
+}
+
+.seller-modal-box h2 {
+    margin-top: 10px;
+    color: var(--gold-light);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(28px, 5vw, 38px);
+    font-weight: 500;
+    line-height: 1.05;
+}
+
+.seller-modal-box p {
+    margin-top: 10px;
+    color: #999;
+    font-size: 12px;
+}
+
+.seller-options {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.seller-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 16px 18px;
+    border: 1px solid #2e2e2e;
+    background: #111;
+    color: var(--gold-light);
+    text-align: left;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.seller-option:hover {
+    border-color: var(--gold);
+    background: #171717;
+    transform: translateY(-2px);
+}
+
+.seller-option-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+}
+
+.seller-option-number {
+    color: #aaa;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .logo-image {
+        width: 54px;
+        height: 54px;
+    }
+
+    .footer-logo-image {
+        width: 85px;
+        height: 85px;
+    }
+
+    .footer-socials {
+        flex-direction: column;
+    }
+
+    .social-button {
+        width: min(100%, 260px);
+    }
+
+    .seller-modal-box {
+        padding: 36px 18px 22px;
+    }
+
+    .seller-option {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .seller-option-number {
+        white-space: normal;
+    }
+}
+
+/* ============================================
+   VISTA AMPLIADA DEL PERFUME
+   ============================================ */
+
+.product-card {
+    cursor: pointer;
+}
+
+.product-card:focus-visible {
+    outline: 1px solid var(--gold-light);
+    outline-offset: 4px;
+}
+
+.product-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.product-modal.hidden {
+    display: none;
+}
+
+.product-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(8px);
+}
+
+.product-modal-box {
+    position: relative;
+    z-index: 1;
+    width: min(920px, 100%);
+    max-height: min(760px, 92vh);
+    overflow: auto;
+    padding: 34px;
+    background: linear-gradient(145deg, #181818, #080808);
+    border: 1px solid rgba(212, 175, 55, 0.72);
+    box-shadow: 0 0 60px rgba(212, 175, 55, 0.18);
+}
+
+.product-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 3;
+    width: 38px;
+    height: 38px;
+    border: 1px solid #3a3a3a;
+    border-radius: 50%;
+    background: #101010;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.product-modal-close:hover {
+    color: var(--gold-light);
+    border-color: var(--gold);
+}
+
+#productModalContent {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.9fr) minmax(300px, 1.1fr);
+    gap: 38px;
+    align-items: center;
+}
+
+.product-modal-image-wrap {
+    position: relative;
+    min-height: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.08), transparent 62%), #0b0b0b;
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    overflow: hidden;
+}
+
+.product-modal-image-wrap img {
+    width: 100%;
+    height: 440px;
+    object-fit: contain;
+    display: block;
+}
+
+.product-modal-placeholder {
+    width: 100%;
+    height: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(212, 175, 55, 0.5);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px;
+}
+
+.product-modal-placeholder.hidden {
+    display: none;
+}
+
+.product-modal-premium {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    padding: 7px 12px;
+    background: var(--ruby);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.product-modal-info {
+    padding: 10px 8px 10px 0;
+}
+
+.product-modal-gender {
+    color: var(--gold);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.product-modal-brand {
+    margin-top: 12px;
+    color: #aaa;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.product-modal-info h2 {
+    margin: 7px 0 14px;
+    color: var(--gold-light);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 0.95;
+    font-weight: 500;
+}
+
+.product-modal-description {
+    color: #c3c3c3;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-line;
+}
+
+.product-modal-price {
+    margin-top: 22px;
+    color: var(--gold-bright);
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.product-modal-stock {
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.product-modal-stock.available {
+    color: #7bd88f;
+}
+
+.product-modal-stock.unavailable {
+    color: #c95b66;
+}
+
+.product-modal-request {
+    width: 100%;
+    margin-top: 25px;
+    padding: 16px 20px;
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: #080808;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.product-modal-request:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+}
+
+.product-modal-request:disabled {
+    background: #292929;
+    border-color: #444;
+    color: #777;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 720px) {
+    .product-modal {
+        padding: 12px;
+    }
+
+    .product-modal-box {
+        max-height: 94vh;
+        padding: 48px 18px 22px;
+    }
+
+    #productModalContent {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+
+    .product-modal-image-wrap,
+    .product-modal-image-wrap img,
+    .product-modal-placeholder {
+        min-height: 300px;
+        height: 300px;
+    }
+
+    .product-modal-info {
+        padding: 0;
+    }
+
+    .product-modal-info h2 {
+        font-size: 43px;
+    }
+}
+
+
+/* ============================================
+   ELIXIR HOUSE - MEJORAS 2026
+============================================ */
+
+.catalog-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 16px;
+    margin: 20px 0 28px;
+    flex-wrap: wrap;
+}
+
+.sort-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-box label {
+    color: var(--gold-light);
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    font-weight: 700;
+}
+
+.sort-box select,
+.favorites-toggle {
+    background: #0d0d0d;
+    color: var(--white);
+    border: 1px solid rgba(212,175,55,.35);
+    border-radius: 9px;
+    min-height: 44px;
+    padding: 0 15px;
+}
+
+.favorites-toggle {
+    cursor: pointer;
+    color: var(--gold-light);
+    letter-spacing: 1px;
+    font-size: 10px;
+    font-weight: 700;
+    transition: .25s ease;
+}
+
+.favorites-toggle:hover,
+.favorites-toggle.active {
+    background: rgba(212,175,55,.12);
+    border-color: var(--gold);
+    box-shadow: 0 0 22px rgba(212,175,55,.08);
+}
+
+.favorites-toggle span {
+    margin-left: 6px;
+    color: var(--white);
+}
+
+.favorite-button {
+    position: absolute;
+    top: 13px;
+    right: 13px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.25);
+    background: rgba(0,0,0,.58);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 5;
+    transition: .25s ease;
+    backdrop-filter: blur(5px);
+}
+
+.favorite-button:hover,
+.favorite-button.active {
+    color: var(--ruby-light);
+    border-color: var(--ruby-light);
+    transform: scale(1.06);
+}
+
+.product-modal-meta {
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin: -10px 0 16px;
+}
+
+.modal-favorite {
+    align-self: flex-start;
+    border: 1px solid rgba(212,175,55,.4);
+    background: transparent;
+    color: var(--gold-light);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+}
+
+.modal-favorite.active {
+    border-color: var(--ruby-light);
+    color: #ff7a8b;
+}
+
+.catalog-categories {
+    scrollbar-width: thin;
+}
+
+.catalog-categories .subcategory-button {
+    white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    .catalog-tools {
+        align-items: stretch;
+    }
+
+    .sort-box {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .sort-box select {
+        flex: 1;
+    }
+
+    .favorites-toggle {
+        width: 100%;
+    }
+}
+
+/* ==========================================================
+   ELIXIR HOUSE — MEJORAS PREMIUM
+   ========================================================== */
+.catalog-hint{color:var(--gray-dark);font-size:11px;letter-spacing:.4px}.product-image{overflow:hidden}.product-image img{transition:transform .55s ease,filter .55s ease}.product-card:hover .product-image img{transform:scale(1.045);filter:saturate(1.06)}
+.favorite-button,.compare-button{position:absolute;top:14px;width:38px;height:38px;border:1px solid rgba(212,175,55,.3);background:rgba(5,5,5,.8);color:var(--gold-light);border-radius:50%;z-index:3;cursor:pointer;transition:.25s ease;backdrop-filter:blur(6px)}.favorite-button{right:14px}.compare-button{left:14px}.favorite-button:hover,.compare-button:hover,.favorite-button.active,.compare-button.active{background:var(--gold);color:#080808;transform:scale(1.07);box-shadow:0 0 18px rgba(212,175,55,.25)}
+.modal-action-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}.modal-favorite,.modal-share{border:1px solid rgba(212,175,55,.45);background:transparent;color:var(--gold-light);padding:9px 13px;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:1px}.modal-favorite.active,.modal-favorite:hover,.modal-share:hover{background:var(--gold);color:#080808}
+.recent-section{padding:70px 7% 90px;background:linear-gradient(180deg,var(--black) 0%,#0d0d0d 100%)}.recent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1200px;margin:auto}.recent-grid .product-description{display:none}
+.compare-bar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1200;display:flex;align-items:center;justify-content:space-between;gap:30px;width:min(680px,calc(100% - 30px));padding:14px 18px;background:rgba(10,10,10,.96);border:1px solid rgba(212,175,55,.45);box-shadow:0 15px 45px rgba(0,0,0,.45);border-radius:12px;backdrop-filter:blur(14px);color:var(--white)}.compare-bar.hidden{display:none}.compare-bar strong{color:var(--gold-light);font-size:20px}.compare-bar-actions{display:flex;gap:8px}.compare-bar button{border:1px solid rgba(212,175,55,.5);background:transparent;color:var(--gold-light);padding:9px 12px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:1px}.compare-bar button:last-child{background:var(--gold);color:#080808}
+.compare-modal{position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:20px}.compare-modal.hidden{display:none}.compare-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}.compare-box{position:relative;width:min(1000px,100%);max-height:90vh;overflow:auto;background:#111;border:1px solid rgba(212,175,55,.35);padding:35px;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.6)}.compare-close{position:absolute;right:18px;top:18px;border:0;background:transparent;color:#fff;font-size:20px;cursor:pointer}.compare-content{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:25px}.compare-column{padding:20px;background:#0b0b0b;border:1px solid rgba(212,175,55,.18);text-align:center}.compare-image{height:210px;display:flex;align-items:center;justify-content:center;margin-bottom:15px;background:#090909;color:var(--gold)}.compare-image img{width:100%;height:100%;object-fit:contain}.compare-column h3{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold-light)}.compare-column p,.compare-column span{display:block;color:var(--gray);font-size:12px;margin-top:6px}.compare-column strong{display:block;color:var(--white);font-size:20px;margin-top:12px}.compare-stock-ok{color:#68c982!important}.compare-stock-no{color:#df6973!important}
+.mobile-bottom-nav{display:none}
+@media(max-width:800px){.recent-grid{grid-template-columns:1fr 1fr}.compare-content{grid-template-columns:1fr}.compare-box{padding:25px 16px}.compare-bar{bottom:78px;gap:12px;font-size:11px}.mobile-bottom-nav{position:fixed;display:flex;left:10px;right:10px;bottom:10px;height:58px;z-index:1100;background:rgba(10,10,10,.96);border:1px solid rgba(212,175,55,.25);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);backdrop-filter:blur(12px);align-items:center;justify-content:space-around}.mobile-bottom-nav a,.mobile-bottom-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--gold-light);font-size:18px;background:none;border:0;min-width:60px;cursor:pointer}.mobile-bottom-nav span{font-size:8px;letter-spacing:.7px;color:var(--gray)}.mobile-bottom-nav b{position:absolute;top:1px;right:11px;background:var(--ruby-light);color:#fff;border-radius:20px;font-size:8px;padding:1px 4px}.footer{padding-bottom:95px}}
+@media(max-width:520px){.recent-grid{grid-template-columns:1fr}.catalog-hint{display:none}.compare-bar{flex-direction:column;align-items:stretch}.compare-bar-actions{width:100%}.compare-bar button{flex:1}.modal-action-row{flex-direction:column}.modal-favorite,.modal-share{width:100%}}
