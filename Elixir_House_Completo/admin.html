@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Elixir House | Administración</title>
+
+    <link rel="stylesheet" href="admin.css">
+    <link rel="icon" type="image/jpeg" href="logo-elixir-house.jpeg">
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================
+         LOGIN
+    ====================================== -->
+
+    <section
+        id="loginSection"
+        class="login-section"
+    >
+
+        <div class="login-box">
+
+            <div class="login-logo">
+                ELIXIR HOUSE
+            </div>
+
+            <p class="login-subtitle">
+                Panel de administración
+            </p>
+
+
+            <form id="loginForm">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Tu email"
+                    required
+                >
+
+
+                <label for="password">
+                    Contraseña
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Tu contraseña"
+                    required
+                >
+
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    INGRESAR
+                </button>
+
+            </form>
+
+
+            <p
+                id="loginMessage"
+                class="message"
+            ></p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================
+         PANEL ADMINISTRADOR
+    ====================================== -->
+
+    <section
+        id="adminSection"
+        class="admin-section hidden"
+    >
+
+
+        <!-- HEADER -->
+
+        <header class="admin-header">
+
+            <div>
+
+                <h1>
+                    ELIXIR HOUSE
+                </h1>
+
+                <p>
+                    Panel de administración
+                </p>
+
+            </div>
+
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+            >
+                CERRAR SESIÓN
+            </button>
+
+        </header>
+
+
+
+        <!-- CONTENIDO -->
+
+        <main class="admin-container">
+
+
+            <!-- ESTADÍSTICAS -->
+
+            <section class="stats">
+
+                <div class="stat-card">
+
+                    <span>
+                        PERFUMES
+                    </span>
+
+                    <strong id="totalPerfumes">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <span>
+                        CON STOCK
+                    </span>
+
+                    <strong id="totalStock">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="stat-card premium-stat">
+
+                    <span>
+                        PREMIUM
+                    </span>
+
+                    <strong id="totalPremium">
+                        0
+                    </strong>
+
+                </div>
+
+            </section>
+
+            <section class="stats stats-extra">
+                <div class="stat-card"><span>MARCA</span><strong id="totalBrands">0</strong></div>
+                <div class="stat-card"><span>CATEGORÍAS</span><strong id="totalCategories">0</strong></div>
+                <div class="stat-card"><span>REGISTROS</span><strong id="totalSales">0</strong></div>
+                <div class="stat-card"><span>VALOR REGISTRADO</span><strong id="totalSalesValue">$0</strong></div>
+            </section>
+
+
+
+            <!-- =====================================
+                 VENDEDORES
+            ====================================== -->
+
+            <section class="seller-stats-section">
+
+                <div class="section-title seller-section-heading">
+                    <div>
+                        <span class="seller-section-label">PUNTOS DE VENTA</span>
+                        <h2>VENDEDORES</h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="refreshSellerStats"
+                        class="secondary-button"
+                    >
+                        ACTUALIZAR
+                    </button>
+                </div>
+
+                <div
+                    id="sellerStats"
+                    class="seller-stats-grid"
+                ></div>
+
+                <p
+                    id="sellerStatsMessage"
+                    class="seller-stats-message"
+                ></p>
+
+            </section>
+
+
+            <!-- =====================================
+                 HISTORIAL DE REGISTROS
+            ====================================== -->
+            <section class="history-section">
+                <div class="section-title seller-section-heading">
+                    <div>
+                        <span class="seller-section-label">ACTIVIDAD</span>
+                        <h2>HISTORIAL</h2>
+                    </div>
+                    <button type="button" id="refreshSales" class="secondary-button">ACTUALIZAR</button>
+                </div>
+                <div class="history-filters">
+                    <label>DESDE <input type="date" id="salesDateFrom"></label>
+                    <label>HASTA <input type="date" id="salesDateTo"></label>
+                    <select id="salesSellerFilter"><option value="todos">Todos los vendedores</option></select>
+                    <button type="button" id="clearSalesFilters" class="secondary-button">LIMPIAR</button>
+                </div>
+                <div class="history-table-wrap">
+                    <table class="history-table">
+                        <thead><tr><th>FECHA</th><th>VENDEDOR</th><th>PERFUME</th><th>PRECIO</th><th>ACCIÓN</th></tr></thead>
+                        <tbody id="salesHistoryBody"></tbody>
+                    </table>
+                </div>
+                <p id="salesHistoryMessage" class="seller-stats-message"></p>
+            </section>
+
+            <!-- ACCIONES -->
+
+            <section class="admin-actions">
+
+                <button
+                    id="showAddPerfume"
+                    class="primary-button"
+                >
+                    + AGREGAR PERFUME
+                </button>
+
+            </section>
+
+
+
+            <!-- FORMULARIO -->
+
+            <section
+                id="perfumeFormSection"
+                class="form-section hidden"
+            >
+
+                <div class="section-title">
+
+                    <h2>
+                        AGREGAR PERFUME
+                    </h2>
+
+                    <button
+                        id="cancelForm"
+                        class="close-button"
+                        type="button"
+                    >
+                        ✕
+                    </button>
+
+                </div>
+
+
+                <form id="perfumeForm">
+
+
+                    <!-- NOMBRE -->
+
+                    <div class="form-group">
+
+                        <label for="perfumeName">
+                            Nombre del perfume
+                        </label>
+
+                        <input
+                            type="text"
+                            id="perfumeName"
+                            placeholder="Ej: Sauvage"
+                            required
+                        >
+
+                    </div>
+
+
+
+                    <!-- MARCA -->
+
+                    <div class="form-group">
+
+                        <label for="perfumeBrand">
+                            Marca
+                        </label>
+
+                        <select
+                            id="perfumeBrand"
+                        >
+
+                            <option value="">
+                                Seleccionar marca
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- GÉNERO -->
+
+                    <div class="form-group">
+
+                        <label for="perfumeGender">
+                            Género
+                        </label>
+
+                        <select
+                            id="perfumeGender"
+                            required
+                        >
+
+                            <option value="">
+                                Seleccionar
+                            </option>
+
+                            <option value="Hombre">
+                                Hombre
+                            </option>
+
+                            <option value="Mujer">
+                                Mujer
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- CATEGORÍA -->
+
+                    <div class="form-group">
+
+                        <label for="perfumeCategory">
+                            Categoría
+                        </label>
+
+                        <select
+                            id="perfumeCategory"
+                        >
+
+                            <option value="">
+                                Seleccionar categoría
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- PRECIO -->
+
+                    <div class="form-group">
+
+                        <label for="perfumePrice">
+                            Precio
+                        </label>
+
+                        <input
+                            type="number"
+                            id="perfumePrice"
+                            min="0"
+                            step="0.01"
+                            placeholder="Ej: 45000"
+                            required
+                        >
+
+                    </div>
+
+
+
+                    <!-- DESCRIPCIÓN -->
+
+                    <div class="form-group full-width">
+
+                        <label for="perfumeDescription">
+                            Descripción
+                        </label>
+
+                        <textarea
+                            id="perfumeDescription"
+                            rows="4"
+                            placeholder="Descripción del perfume..."
+                        ></textarea>
+
+                    </div>
+
+
+
+                    <!-- IMAGEN -->
+<div class="form-group full-width">
+    <label for="perfumeImageFile">
+        FOTO DEL PERFUME
+    </label>
+
+    <input
+        type="file"
+        id="perfumeImageFile"
+        accept="image/*"
+    >
+
+    <small>
+        Seleccioná una foto desde tu computadora.
+        Máximo 5 MB.
+    </small>
+
+    <div
+        id="imagePreviewContainer"
+        style="margin-top: 15px; display: none;"
+    >
+        <img
+            id="imagePreview"
+            src=""
+            alt="Vista previa"
+            style="
+                max-width: 220px;
+                max-height: 220px;
+                object-fit: contain;
+                border-radius: 10px;
+            "
+        >
+    </div>
+</div>
+
+
+
+                    <!-- OPCIONES -->
+
+                    <div class="checkbox-container">
+
+                        <label class="checkbox-label">
+
+                            <input
+                                type="checkbox"
+                                id="perfumeStock"
+                                checked
+                            >
+
+                            <span>
+                                Hay stock
+                            </span>
+
+                        </label>
+
+
+                        <label class="checkbox-label">
+
+                            <input
+                                type="checkbox"
+                                id="perfumePremium"
+                            >
+
+                            <span>
+                                Perfume Premium
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+
+                    <!-- GUARDAR -->
+
+                    <button
+                        type="submit"
+                        class="save-button"
+                    >
+                        GUARDAR PERFUME
+                    </button>
+
+
+                    <p
+                        id="formMessage"
+                        class="message"
+                    ></p>
+
+                </form>
+
+            </section>
+
+
+            <!-- =====================================
+                 MARCAS Y CATEGORÍAS
+            ====================================== -->
+
+            <section class="management-section">
+
+                <div class="management-grid">
+
+
+                    <!-- ================================
+                         MARCAS
+                    ================================= -->
+
+                    <div class="management-box">
+
+                        <div class="section-title">
+
+                            <h2>
+                                MARCAS
+                            </h2>
+
+                        </div>
+
+
+                        <form id="brandForm">
+
+                            <div class="form-group">
+
+                                <label for="brandName">
+                                    Nombre de la marca
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="brandName"
+                                    placeholder="Ej: Paco Rabanne"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <button id="brandSubmitButton" type="submit" class="primary-button">
+                                + AGREGAR MARCA
+                            </button>
+                            <button id="brandCancelEdit" type="button" class="secondary-button hidden">CANCELAR EDICIÓN</button>
+
+                        </form>
+
+
+                        <p class="management-help">Podés editar o eliminar marcas. Si una marca está siendo usada por un perfume, el sistema impedirá eliminarla para proteger el catálogo.</p>
+                        <div id="brandsList" class="management-list"></div>
+
+                    </div>
+
+
+
+                    <!-- ================================
+                         CATEGORÍAS
+                    ================================= -->
+
+                    <div class="management-box">
+
+                        <div class="section-title">
+
+                            <h2>
+                                CATEGORÍAS
+                            </h2>
+
+                        </div>
+
+
+                        <form id="categoryForm">
+
+                            <div class="form-group">
+
+                                <label for="categoryName">
+                                    Nombre de la subcategoría
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="categoryName"
+                                    placeholder="Ej: Amaderados"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="categoryGender">
+                                    Género
+                                </label>
+
+                                <select
+                                    id="categoryGender"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Seleccionar género
+                                    </option>
+
+                                    <option value="Hombre">
+                                        Hombre
+                                    </option>
+
+                                    <option value="Mujer">
+                                        Mujer
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <button id="categorySubmitButton" type="submit" class="primary-button">
+                                + AGREGAR CATEGORÍA
+                            </button>
+                            <button id="categoryCancelEdit" type="button" class="secondary-button hidden">CANCELAR EDICIÓN</button>
+
+                        </form>
+
+
+                        <p class="management-help">Las categorías se administran por género. Si una categoría está en uso, primero reasigná esos perfumes.</p>
+                        <div id="categoriesList" class="management-list"></div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- LISTADO -->
+
+            <section class="products-section">
+
+                <div class="section-title">
+
+                    <h2>
+                        PERFUMES
+                    </h2>
+
+                    <input
+                        type="text"
+                        id="adminSearch"
+                        placeholder="Buscar perfume..."
+                    >
+
+                </div>
+
+
+                <div
+                    id="adminProducts"
+                    class="admin-products"
+                ></div>
+
+            </section>
+
+
+            <div class="admin-footer-note">Elixir House · Panel privado · Los cambios del catálogo se guardan en Supabase.</div>
+        </main>
+
+    </section>
+
+
+
+    <!-- =====================================
+         SCRIPTS
+    ====================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+
+    <script src="supabase.js"></script>
+
+    <script src="admin.js"></script>
+
+</body>
+
+</html>
