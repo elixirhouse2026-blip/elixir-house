@@ -57,7 +57,7 @@ const brandCancelEdit = $("brandCancelEdit");
 
 const categoryForm = $("categoryForm");
 const categoryName = $("categoryName");
-const categoryGender = $("categoryGender");
+const categoryGender = $("categoryGender"); // Categorías ya no dependen de un género
 const categoriesList = $("categoriesList");
 const categorySubmitButton = $("categorySubmitButton");
 const categoryCancelEdit = $("categoryCancelEdit");
@@ -178,6 +178,7 @@ async function loadPerfumes() {
         .from("perfumes")
         .select(`
             id, nombre, genero, precio, descripcion, imagen, stock, premium,
+            destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
             marca_id, categoria_id,
             marcas (id, nombre),
             categorias (id, nombre, genero)
@@ -296,7 +297,7 @@ function populatePerfumeSelects() {
         categorias.forEach(category => {
             const option = document.createElement("option");
             option.value = category.id;
-            option.textContent = `${category.nombre} - ${category.genero}`;
+            option.textContent = category.nombre;
             perfumeCategory.appendChild(option);
         });
         if (current) perfumeCategory.value = current;
@@ -358,7 +359,7 @@ function renderCategories() {
         row.innerHTML = `
             <div>
                 <strong>${escapeHTML(category.nombre)}</strong>
-                <span>${escapeHTML(category.genero || "Sin género")} · ${used ? `${used} perfume${used === 1 ? "" : "s"} asociado${used === 1 ? "" : "s"}` : "Sin perfumes asociados"}</span>
+                <span>${used ? `${used} perfume${used === 1 ? "" : "s"} asociado${used === 1 ? "" : "s"}` : "Sin perfumes asociados"}</span>
             </div>
             <div class="management-actions">
                 <button type="button" class="edit-management" data-id="${escapeHTML(category.id)}">EDITAR</button>
@@ -451,7 +452,6 @@ function editCategory(id) {
     if (!category) return;
     editingCategoryId = category.id;
     categoryName.value = category.nombre || "";
-    categoryGender.value = category.genero || "";
     categorySubmitButton.textContent = "GUARDAR CAMBIOS";
     categoryCancelEdit.classList.remove("hidden");
     categoryName.focus();
@@ -470,19 +470,18 @@ categoryCancelEdit?.addEventListener("click", cancelCategoryEdit);
 categoryForm?.addEventListener("submit", async function (event) {
     event.preventDefault();
     const name = categoryName.value.trim();
-    const gender = categoryGender.value;
-    if (!name || !gender) return;
+    if (!name) return;
 
     let result;
     if (editingCategoryId) {
         result = await supabaseClient
             .from("categorias")
-            .update({ nombre: name, genero: gender })
+            .update({ nombre: name })
             .eq("id", editingCategoryId);
     } else {
         result = await supabaseClient
             .from("categorias")
-            .insert({ nombre: name, genero: gender });
+            .insert({ nombre: name });
     }
 
     if (result.error) {
@@ -525,9 +524,15 @@ async function deleteCategory(id) {
 
 function openNewPerfumeForm() {
     editingPerfumeId = null;
+    [1, 2, 3].forEach(n => { const el = $(`perfumeAccord${n}`); if (el) el.value = ""; });
     perfumeForm.reset();
     $("perfumeStock").checked = true;
     $("perfumePremium").checked = false;
+    if ($("perfumeFeatured")) $("perfumeFeatured").checked = false;
+    if ($("perfumePromoActive")) $("perfumePromoActive").checked = false;
+    if ($("perfumeDiscount")) $("perfumeDiscount").value = "0";
+    if ($("promoStart")) $("promoStart").value = "";
+    if ($("promoEnd")) $("promoEnd").value = "";
     document.querySelector("#perfumeFormSection .section-title h2").textContent = "AGREGAR PERFUME";
     formMessage.textContent = "";
     clearImagePreview();
@@ -540,6 +545,7 @@ showAddPerfume?.addEventListener("click", openNewPerfumeForm);
 cancelForm?.addEventListener("click", function () {
     editingPerfumeId = null;
     perfumeForm.reset();
+    [1, 2, 3].forEach(n => { const el = $(`perfumeAccord${n}`); if (el) el.value = ""; });
     perfumeFormSection.classList.add("hidden");
     formMessage.textContent = "";
     clearImagePreview();
@@ -547,14 +553,12 @@ cancelForm?.addEventListener("click", function () {
 
 perfumeGender?.addEventListener("change", function () {
     const current = perfumeCategory.value;
-    const gender = perfumeGender.value;
     perfumeCategory.innerHTML = '<option value="">Seleccionar categoría</option>';
     categorias
-        .filter(c => !gender || c.genero === gender)
         .forEach(c => {
             const option = document.createElement("option");
             option.value = c.id;
-            option.textContent = `${c.nombre} - ${c.genero}`;
+            option.textContent = c.nombre;
             perfumeCategory.appendChild(option);
         });
     if ([...perfumeCategory.options].some(o => o.value === String(current))) perfumeCategory.value = current;
@@ -572,8 +576,27 @@ perfumeForm?.addEventListener("submit", async function (event) {
     const categoriaId = perfumeCategory.value || null;
     const precio = Number($("perfumePrice").value);
     const descripcion = $("perfumeDescription").value.trim();
+    const acordes = [1, 2, 3].map(n => $(`perfumeAccord${n}`)?.value.trim() || "").filter(Boolean);
+    if (acordes.length < 1 || acordes.length > 3) {
+        formMessage.textContent = "Ingresá entre 1 y 3 acordes para el perfume.";
+        formMessage.style.color = "#ff6b6b";
+        return;
+    }
     const stock = $("perfumeStock").checked;
     const premium = $("perfumePremium").checked;
+    const destacado = $("perfumeFeatured")?.checked || false;
+    const promocion_activa = $("perfumePromoActive")?.checked || false;
+    const descuento_porcentaje = Math.min(90, Math.max(0, Number($("perfumeDiscount")?.value) || 0));
+    const promocion_inicio = $("promoStart")?.value || null;
+    const promocion_fin = $("promoEnd")?.value || null;
+    if (promocion_activa && descuento_porcentaje <= 0) {
+        formMessage.textContent = "Ingresá un descuento mayor que 0 para activar la promoción.";
+        formMessage.style.color = "#ff6b6b"; return;
+    }
+    if (promocion_inicio && promocion_fin && promocion_fin < promocion_inicio) {
+        formMessage.textContent = "La fecha de fin no puede ser anterior a la fecha de inicio.";
+        formMessage.style.color = "#ff6b6b"; return;
+    }
 
     let imagen = null;
     if (editingPerfumeId) {
@@ -613,7 +636,7 @@ perfumeForm?.addEventListener("submit", async function (event) {
         imagen = supabaseClient.storage.from("perfumes").getPublicUrl(path).data.publicUrl;
     }
 
-    const data = { nombre, marca_id: marcaId, genero, categoria_id: categoriaId, precio, descripcion, imagen, stock, premium };
+    const data = { nombre, marca_id: marcaId, genero, categoria_id: categoriaId, precio, descripcion, acordes, imagen, stock, premium, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin };
 
     let result;
     if (editingPerfumeId) {
@@ -668,7 +691,9 @@ function renderAdminProducts(products) {
                 <p><b>Marca:</b> ${escapeHTML(brand)}</p>
                 <p><b>Género:</b> ${escapeHTML(perfume.genero)}</p>
                 <p><b>Categoría:</b> ${escapeHTML(category)}</p>
-                <div class="admin-product-price">${formatPrice(perfume.precio)}</div>
+                <p><b>Acordes:</b> ${escapeHTML((perfume.acordes || []).join(", ") || "Sin acordes")}</p>
+                <div class="admin-product-price">${perfume.promocion_activa && Number(perfume.descuento_porcentaje)>0 ? `<del>${formatPrice(perfume.precio)}</del> ${formatPrice(Number(perfume.precio)*(1-Number(perfume.descuento_porcentaje)/100))} <span class="admin-promo-badge">${escapeHTML(perfume.descuento_porcentaje)}% OFF</span>` : formatPrice(perfume.precio)}</div>
+                    ${perfume.destacado ? '<span class="admin-featured-badge">DESTACADO EN INICIO</span>' : ''}
                 <div class="admin-product-status">
                     <span class="${perfume.stock ? "status-stock" : "status-no-stock"}">● ${perfume.stock ? "CON STOCK" : "SIN STOCK"}</span>
                     ${perfume.premium ? '<span class="admin-premium-badge">♦ PREMIUM</span>' : ""}
@@ -701,8 +726,14 @@ function editPerfume(id) {
     perfumeCategory.value = perfume.categoria_id || "";
     $("perfumePrice").value = perfume.precio ?? "";
     $("perfumeDescription").value = perfume.descripcion || "";
+    [1, 2, 3].forEach((n, i) => { const el = $(`perfumeAccord${n}`); if (el) el.value = (perfume.acordes || [])[i] || ""; });
     $("perfumeStock").checked = perfume.stock === true;
     $("perfumePremium").checked = perfume.premium === true;
+    if ($("perfumeFeatured")) $("perfumeFeatured").checked = perfume.destacado === true;
+    if ($("perfumePromoActive")) $("perfumePromoActive").checked = perfume.promocion_activa === true;
+    if ($("perfumeDiscount")) $("perfumeDiscount").value = perfume.descuento_porcentaje ?? 0;
+    if ($("promoStart")) $("promoStart").value = perfume.promocion_inicio || "";
+    if ($("promoEnd")) $("promoEnd").value = perfume.promocion_fin || "";
     perfumeImageFile.value = "";
 
     if (perfume.imagen) {

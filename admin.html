@@ -178,8 +178,7 @@
             <section class="stats stats-extra">
                 <div class="stat-card"><span>MARCA</span><strong id="totalBrands">0</strong></div>
                 <div class="stat-card"><span>CATEGORÍAS</span><strong id="totalCategories">0</strong></div>
-                <div class="stat-card"><span>REGISTROS</span><strong id="totalSales">0</strong></div>
-                <div class="stat-card"><span>VALOR REGISTRADO</span><strong id="totalSalesValue">$0</strong></div>
+                
             </section>
 
 
@@ -217,32 +216,6 @@
 
             </section>
 
-
-            <!-- =====================================
-                 HISTORIAL DE REGISTROS
-            ====================================== -->
-            <section class="history-section">
-                <div class="section-title seller-section-heading">
-                    <div>
-                        <span class="seller-section-label">ACTIVIDAD</span>
-                        <h2>HISTORIAL</h2>
-                    </div>
-                    <button type="button" id="refreshSales" class="secondary-button">ACTUALIZAR</button>
-                </div>
-                <div class="history-filters">
-                    <label>DESDE <input type="date" id="salesDateFrom"></label>
-                    <label>HASTA <input type="date" id="salesDateTo"></label>
-                    <select id="salesSellerFilter"><option value="todos">Todos los vendedores</option></select>
-                    <button type="button" id="clearSalesFilters" class="secondary-button">LIMPIAR</button>
-                </div>
-                <div class="history-table-wrap">
-                    <table class="history-table">
-                        <thead><tr><th>FECHA</th><th>VENDEDOR</th><th>PERFUME</th><th>PRECIO</th><th>ACCIÓN</th></tr></thead>
-                        <tbody id="salesHistoryBody"></tbody>
-                    </table>
-                </div>
-                <p id="salesHistoryMessage" class="seller-stats-message"></p>
-            </section>
 
             <!-- ACCIONES -->
 
@@ -417,7 +390,15 @@
 
                     </div>
 
-
+                    <div class="form-group full-width">
+                        <label for="perfumeAccord1">Acordes (de 1 a 3)</label>
+                        <div class="accord-inputs">
+                            <input type="text" id="perfumeAccord1" maxlength="40" placeholder="Acorde 1 (obligatorio)">
+                            <input type="text" id="perfumeAccord2" maxlength="40" placeholder="Acorde 2 (opcional)">
+                            <input type="text" id="perfumeAccord3" maxlength="40" placeholder="Acorde 3 (opcional)">
+                        </div>
+                        <small class="management-help">Ingresá al menos un acorde y como máximo tres. Ej.: amaderado, cítrico, avainillado.</small>
+                    </div>
 
                     <!-- IMAGEN -->
 <div class="form-group full-width">
@@ -491,6 +472,21 @@
                     </div>
 
 
+
+                    <div class="form-group full-width admin-promo-box">
+                        <h3>DESTACAR Y PROMOCIONAR</h3>
+                        <div class="checkbox-container">
+                            <label class="checkbox-label"><input type="checkbox" id="perfumeFeatured"><span>Mostrar en perfumes destacados del inicio</span></label>
+                            <label class="checkbox-label"><input type="checkbox" id="perfumePromoActive"><span>Activar promoción</span></label>
+                        </div>
+                        <label for="perfumeDiscount">Descuento (%)</label>
+                        <input type="number" id="perfumeDiscount" min="0" max="90" step="1" value="0" placeholder="Ej. 30">
+                        <div class="promo-dates-row">
+                            <label>Inicio de promoción<input type="date" id="promoStart"></label>
+                            <label>Fin de promoción<input type="date" id="promoEnd"></label>
+                        </div>
+                        <small>El precio de lista se conserva. El sitio calcula y muestra el precio promocional automáticamente.</small>
+                    </div>
 
                     <!-- GUARDAR -->
 
@@ -589,7 +585,7 @@
                             <div class="form-group">
 
                                 <label for="categoryName">
-                                    Nombre de la subcategoría
+                                    Nombre de la categoría
                                 </label>
 
                                 <input
@@ -602,32 +598,6 @@
                             </div>
 
 
-                            <div class="form-group">
-
-                                <label for="categoryGender">
-                                    Género
-                                </label>
-
-                                <select
-                                    id="categoryGender"
-                                    required
-                                >
-
-                                    <option value="">
-                                        Seleccionar género
-                                    </option>
-
-                                    <option value="Hombre">
-                                        Hombre
-                                    </option>
-
-                                    <option value="Mujer">
-                                        Mujer
-                                    </option>
-
-                                </select>
-
-                            </div>
 
 
                             <button id="categorySubmitButton" type="submit" class="primary-button">
@@ -638,7 +608,7 @@
                         </form>
 
 
-                        <p class="management-help">Las categorías se administran por género. Si una categoría está en uso, primero reasigná esos perfumes.</p>
+                        <p class="management-help">Las categorías son independientes del género. Al cargar cada perfume elegís si es Hombre o Mujer. Si una categoría está en uso, primero reasigná esos perfumes.</p>
                         <div id="categoriesList" class="management-list"></div>
 
                     </div>

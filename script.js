@@ -52,6 +52,9 @@ const compareBar = document.getElementById("compareBar");
 const compareCount = document.getElementById("compareCount");
 const compareModal = document.getElementById("compareModal");
 const compareContent = document.getElementById("compareContent");
+const featuredCarousel = document.getElementById("featuredCarousel");
+const featuredDots = document.getElementById("featuredDots");
+let featuredIndex = 0;
 
 function formatPrice(price) {
     return new Intl.NumberFormat("es-AR", {
@@ -156,8 +159,8 @@ async function loadPerfumes() {
         const result = await supabaseClient
             .from("perfumes")
             .select(`
-                id, nombre, genero, precio, descripcion, imagen, stock, premium,
-                marca_id, categoria_id,
+                id, nombre, genero, precio, descripcion, acordes, imagen, stock, premium,
+                marca_id, categoria_id, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
                 marcas (id, nombre),
                 categorias (id, nombre, genero)
             `)
@@ -176,15 +179,22 @@ async function loadPerfumes() {
                 categoria_id: p.categoria_id,
                 precio: Number(p.precio) || 0,
                 descripcion: p.descripcion || "",
+                acordes: Array.isArray(p.acordes) ? p.acordes : [],
                 imagen: p.imagen || "",
                 stock: p.stock === true,
-                premium: p.premium === true
+                premium: p.premium === true,
+                destacado: p.destacado === true,
+                promocion_activa: p.promocion_activa === true,
+                descuento_porcentaje: Math.min(90, Math.max(0, Number(p.descuento_porcentaje) || 0)),
+                promocion_inicio: p.promocion_inicio || null,
+                promocion_fin: p.promocion_fin || null
             };
         });
 
         buildDynamicFilters();
         renderSubcategories();
         filterProducts();
+        renderFeaturedCarousel();
     } catch (error) {
         console.error("Error cargando perfumes:", error);
         showConnectionError();
@@ -306,6 +316,48 @@ function filterProducts() {
     renderProducts(filteredPerfumes);
 }
 
+function promoIsActive(perfume) {
+    if (!perfume?.promocion_activa || !(Number(perfume.descuento_porcentaje) > 0)) return false;
+    const now = new Date();
+    if (perfume.promocion_inicio && new Date(perfume.promocion_inicio + "T00:00:00") > now) return false;
+    if (perfume.promocion_fin && new Date(perfume.promocion_fin + "T23:59:59") < now) return false;
+    return true;
+}
+function effectivePrice(perfume) {
+    return promoIsActive(perfume) ? Math.round(Number(perfume.precio) * (1 - Number(perfume.descuento_porcentaje) / 100)) : Number(perfume.precio) || 0;
+}
+function renderFeaturedCarousel() {
+    if (!featuredCarousel) return;
+    const featured = perfumes.filter(p => p.destacado || promoIsActive(p)).slice(0, 12);
+    featuredCarousel.innerHTML = "";
+    featured.forEach(p => {
+        const card = createProductCard(p, true);
+        card.classList.add("featured-card");
+        featuredCarousel.appendChild(card);
+    });
+    if (!featured.length) {
+        featuredCarousel.innerHTML = '<p class="featured-empty">Próximamente vas a encontrar acá nuestra selección especial.</p>';
+    }
+    if (featuredDots) {
+        featuredDots.innerHTML = "";
+        const count = Math.ceil(featured.length / visibleFeaturedCards());
+        for (let i=0;i<count;i++) {
+            const dot=document.createElement("button"); dot.type="button"; dot.className="carousel-dot"+(i===featuredIndex?" active":""); dot.setAttribute("aria-label",`Ir a la selección ${i+1}`);
+            dot.addEventListener("click",()=>{featuredIndex=i; scrollFeatured();}); featuredDots.appendChild(dot);
+        }
+    }
+}
+function visibleFeaturedCards() { return window.matchMedia("(max-width: 620px)").matches ? 1 : window.matchMedia("(max-width: 1000px)").matches ? 2 : 3; }
+function scrollFeatured() {
+    if (!featuredCarousel) return;
+    const card=featuredCarousel.querySelector(".featured-card");
+    if (card) featuredCarousel.scrollTo({left: featuredIndex * visibleFeaturedCards() * (card.getBoundingClientRect().width + 18), behavior:"smooth"});
+    featuredDots?.querySelectorAll(".carousel-dot").forEach((d,i)=>d.classList.toggle("active",i===featuredIndex));
+}
+document.getElementById("featuredPrev")?.addEventListener("click",()=>{const count=featuredDots?.children.length||0;featuredIndex=Math.max(0,featuredIndex-1);scrollFeatured();});
+document.getElementById("featuredNext")?.addEventListener("click",()=>{const count=featuredDots?.children.length||0;featuredIndex=Math.min(Math.max(0,count-1),featuredIndex+1);scrollFeatured();});
+window.addEventListener("resize",()=>{if(featuredCarousel) renderFeaturedCarousel();});
+
 function createProductCard(perfume, compact = false) {
     const article = document.createElement("article");
     article.className = "product-card" + (perfume.premium ? " premium-card" : "");
@@ -328,7 +380,8 @@ function createProductCard(perfume, compact = false) {
 
     const tag = document.createElement("span");
     tag.className = "product-tag" + (perfume.premium ? " ruby" : "");
-    tag.textContent = perfume.premium ? "PREMIUM" : "ELIXIR HOUSE";
+    tag.textContent = promoIsActive(perfume) ? `${perfume.descuento_porcentaje}% OFF` : (perfume.premium ? "PREMIUM" : (perfume.destacado ? "DESTACADO" : "ELIXIR HOUSE"));
+    if (promoIsActive(perfume)) tag.classList.add("promo-tag");
     imageContainer.appendChild(tag);
 
     const favorite = document.createElement("button");
@@ -396,7 +449,12 @@ function createProductCard(perfume, compact = false) {
 
     const price = document.createElement("span");
     price.className = "product-price";
-    price.textContent = formatPrice(perfume.precio);
+    if (promoIsActive(perfume)) {
+        const priceWrap = document.createElement("span"); priceWrap.className = "price-promo-wrap";
+        const oldPrice = document.createElement("del"); oldPrice.className = "old-price"; oldPrice.textContent = formatPrice(perfume.precio);
+        price.textContent = formatPrice(effectivePrice(perfume)); price.classList.add("promo-price");
+        priceWrap.append(oldPrice, price); bottom.appendChild(priceWrap);
+    } else { price.textContent = formatPrice(perfume.precio); bottom.appendChild(price); }
 
     const button = document.createElement("button");
     button.className = "request-button";
@@ -405,7 +463,7 @@ function createProductCard(perfume, compact = false) {
     button.disabled = !perfume.stock;
     if (perfume.stock) button.addEventListener("click", () => requestPerfume(perfume));
 
-    bottom.append(price, button);
+    bottom.append(button);
 
     const stock = document.createElement("div");
     stock.className = perfume.stock ? "stock available" : "stock unavailable";
@@ -423,6 +481,7 @@ function renderProducts(products) {
 
     products.filter(p => !p.premium).forEach(p => productsGrid.appendChild(createProductCard(p)));
     products.filter(p => p.premium).forEach(p => premiumGrid.appendChild(createProductCard(p)));
+    renderFeaturedCarousel();
 
     if (productCount) productCount.textContent = products.length === 1 ? "1 perfume" : `${products.length} perfumes`;
     if (noResults) noResults.style.display = products.length ? "none" : "block";
@@ -446,7 +505,8 @@ function buildPerfumeMessage(perfume) {
     if (perfume.marca && perfume.marca !== "Sin marca") message += "\n🏷️ Marca: " + perfume.marca;
     if (perfume.genero) message += "\n👤 " + perfume.genero;
     if (perfume.categoria && perfume.categoria !== "Sin categoría") message += "\n🌿 Categoría: " + perfume.categoria;
-    message += "\n💰 Precio: " + formatPrice(perfume.precio);
+    message += "\n💰 Precio: " + formatPrice(effectivePrice(perfume));
+    if (promoIsActive(perfume)) message += `\n🏷️ Promoción: ${perfume.descuento_porcentaje}% OFF (antes ${formatPrice(perfume.precio)})`;
     message += "\n\n¿Me pueden confirmar disponibilidad?";
     return message;
 }
@@ -456,7 +516,7 @@ async function registerSellerSale(perfume, seller) {
     const result = await supabaseClient.from("ventas").insert({
         vendedor_id: seller.id,
         perfume_id: perfume.id,
-        precio: perfume.precio
+        precio: effectivePrice(perfume)
     });
     if (result.error) console.error("No se pudo registrar el registro:", result.error);
 }
@@ -524,7 +584,8 @@ function openProductModal(perfume) {
             <h2>${escapeHTML(perfume.nombre)}</h2>
             <p class="product-modal-meta">${escapeHTML(perfume.categoria)}</p>
             <p class="product-modal-description">${escapeHTML(perfume.descripcion || "Sin descripción disponible.")}</p>
-            <div class="product-modal-price">${formatPrice(perfume.precio)}</div>
+            ${(perfume.acordes && perfume.acordes.length) ? `<div class="product-modal-accords"><strong>Acordes</strong><div>${perfume.acordes.map(acorde => `<span>${escapeHTML(acorde)}</span>`).join("")}</div></div>` : ""}
+            <div class="product-modal-price">${promoIsActive(perfume) ? `<del>${formatPrice(perfume.precio)}</del> <strong>${formatPrice(effectivePrice(perfume))}</strong> <span class="modal-promo-badge">${perfume.descuento_porcentaje}% OFF</span>` : formatPrice(perfume.precio)}</div>
             <div class="product-modal-stock ${perfume.stock ? "available" : "unavailable"}">${perfume.stock ? "● DISPONIBLE" : "● SIN STOCK"}</div>
             <button type="button" class="product-modal-request" ${perfume.stock ? "" : "disabled"}>
                 ${perfume.stock ? "SOLICITAR POR WHATSAPP" : "SIN STOCK"}
@@ -606,6 +667,7 @@ document.getElementById("closeCompare")?.addEventListener("click", closeCompareM
 document.querySelector(".compare-backdrop")?.addEventListener("click", closeCompareModal);
 document.getElementById("clearCompare")?.addEventListener("click", function () { compareItems.clear(); saveCompare(); renderProducts(filteredPerfumes); });
 document.getElementById("mobileWhatsappButton")?.addEventListener("click", () => openSellerModal(null, false));
+document.getElementById("floatingWhatsapp")?.addEventListener("click", () => openSellerModal(null, false));
 document.getElementById("mobileFavoritesButton")?.addEventListener("click", function () {
     if (favoritesToggle) { favoritesToggle.dataset.active = "true"; favoritesToggle.classList.add("active"); }
     document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" });
