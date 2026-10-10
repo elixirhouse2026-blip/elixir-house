@@ -44,7 +44,14 @@ const refreshSellerStats = $("refreshSellerStats");
 
 const perfumeBrand = $("perfumeBrand");
 const perfumeCategory = $("perfumeCategory");
+const seasonOptions = $("seasonOptions");
+const SEASONS = ["Verano", "Invierno", "Otoño", "Primavera"];
+function getSelectedSeasons() { return [...document.querySelectorAll('input[name="temporadas"]:checked')].map(el => el.value); }
+function setSelectedSeasons(values = []) { document.querySelectorAll('input[name="temporadas"]').forEach(el => { el.checked = values.includes(el.value); }); }
+function setupSeasonLimit() { document.querySelectorAll('input[name="temporadas"]').forEach(el => el.addEventListener("change", () => { const selected = getSelectedSeasons(); if (selected.length > 2) { el.checked = false; alert("Podés elegir como máximo 2 temporadas por perfume."); } })); }
+setupSeasonLimit();
 const perfumeGender = $("perfumeGender");
+const productType = $("productType");
 const perfumeImageFile = $("perfumeImageFile");
 const imagePreview = $("imagePreview");
 const imagePreviewContainer = $("imagePreviewContainer");
@@ -177,7 +184,7 @@ async function loadPerfumes() {
     const result = await supabaseClient
         .from("perfumes")
         .select(`
-            id, nombre, genero, precio, descripcion, acordes, imagen, stock, premium,
+            id, nombre, tipo_producto, genero, precio, descripcion, acordes, imagen, stock, premium, temporadas,
             destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
             marca_id, categoria_id,
             marcas (id, nombre),
@@ -294,10 +301,10 @@ function populatePerfumeSelects() {
     if (perfumeCategory) {
         const current = perfumeCategory.value;
         perfumeCategory.innerHTML = '<option value="">Seleccionar categoría</option>';
-        categorias.forEach(category => {
+        SEASONS.forEach(name => {
             const option = document.createElement("option");
-            option.value = category.id;
-            option.textContent = category.nombre;
+            option.value = name;
+            option.textContent = name;
             perfumeCategory.appendChild(option);
         });
         if (current) perfumeCategory.value = current;
@@ -522,10 +529,28 @@ async function deleteCategory(id) {
     updateStatistics();
 }
 
+function updateProductTypeFields() {
+    const isPerfume = (productType?.value || "Perfume") === "Perfume";
+    const genderField = $("genderField");
+    const accordsField = $("accordsField");
+    const seasonsField = document.querySelector(".season-selector-group");
+    if (genderField) genderField.classList.toggle("hidden", !isPerfume);
+    if (accordsField) accordsField.classList.toggle("hidden", !isPerfume);
+    if (seasonsField) seasonsField.classList.toggle("hidden", !isPerfume);
+    const label = $("productNameLabel");
+    if (label) label.textContent = isPerfume ? "Nombre del perfume" : "Nombre del producto";
+    const heading = document.querySelector("#perfumeFormSection .section-title h2");
+    if (heading && !editingPerfumeId) heading.textContent = isPerfume ? "AGREGAR PERFUME" : "AGREGAR PRODUCTO";
+}
+productType?.addEventListener("change", updateProductTypeFields);
+
 function openNewPerfumeForm() {
     editingPerfumeId = null;
     [1, 2, 3].forEach(n => { const el = $(`perfumeAccord${n}`); if (el) el.value = ""; });
     perfumeForm.reset();
+    if (productType) productType.value = "Perfume";
+    setSelectedSeasons([]);
+    updateProductTypeFields();
     $("perfumeStock").checked = true;
     $("perfumePremium").checked = false;
     if ($("perfumeFeatured")) $("perfumeFeatured").checked = false;
@@ -545,6 +570,7 @@ showAddPerfume?.addEventListener("click", openNewPerfumeForm);
 cancelForm?.addEventListener("click", function () {
     editingPerfumeId = null;
     perfumeForm.reset();
+    setSelectedSeasons([]);
     [1, 2, 3].forEach(n => { const el = $(`perfumeAccord${n}`); if (el) el.value = ""; });
     perfumeFormSection.classList.add("hidden");
     formMessage.textContent = "";
@@ -554,13 +580,12 @@ cancelForm?.addEventListener("click", function () {
 perfumeGender?.addEventListener("change", function () {
     const current = perfumeCategory.value;
     perfumeCategory.innerHTML = '<option value="">Seleccionar categoría</option>';
-    categorias
-        .forEach(c => {
-            const option = document.createElement("option");
-            option.value = c.id;
-            option.textContent = c.nombre;
-            perfumeCategory.appendChild(option);
-        });
+    SEASONS.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        perfumeCategory.appendChild(option);
+    });
     if ([...perfumeCategory.options].some(o => o.value === String(current))) perfumeCategory.value = current;
 });
 
@@ -571,13 +596,20 @@ perfumeForm?.addEventListener("submit", async function (event) {
     formMessage.style.color = "#d8b94f";
 
     const nombre = $("perfumeName").value.trim();
+    const tipo_producto = productType?.value || "Perfume";
     const marcaId = perfumeBrand.value || null;
-    const genero = perfumeGender.value;
-    const categoriaId = perfumeCategory.value || null;
+    const genero = tipo_producto === "Perfume" ? perfumeGender.value : "Unisex";
+    const temporadas = tipo_producto === "Perfume" ? getSelectedSeasons() : [];
+    if (temporadas.length > 2) {
+        formMessage.textContent = "Elegí como máximo 2 temporadas.";
+        formMessage.style.color = "#ff6b6b";
+        return;
+    }
+    const categoriaId = null;
     const precio = Number($("perfumePrice").value);
     const descripcion = $("perfumeDescription").value.trim();
-    const acordes = [1, 2, 3].map(n => $(`perfumeAccord${n}`)?.value.trim() || "").filter(Boolean);
-    if (acordes.length < 1 || acordes.length > 3) {
+    const acordes = tipo_producto === "Perfume" ? [1, 2, 3].map(n => $(`perfumeAccord${n}`)?.value.trim() || "").filter(Boolean) : [];
+    if (tipo_producto === "Perfume" && (acordes.length < 1 || acordes.length > 3)) {
         formMessage.textContent = "Ingresá entre 1 y 3 acordes para el perfume.";
         formMessage.style.color = "#ff6b6b";
         return;
@@ -636,7 +668,7 @@ perfumeForm?.addEventListener("submit", async function (event) {
         imagen = supabaseClient.storage.from("perfumes").getPublicUrl(path).data.publicUrl;
     }
 
-    const data = { nombre, marca_id: marcaId, genero, categoria_id: categoriaId, precio, descripcion, acordes, imagen, stock, premium, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin };
+    const data = { nombre, tipo_producto, marca_id: marcaId, genero, categoria_id: categoriaId, temporadas, precio, descripcion, acordes, imagen, stock, premium, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin };
 
     let result;
     if (editingPerfumeId) {
@@ -652,10 +684,13 @@ perfumeForm?.addEventListener("submit", async function (event) {
         return;
     }
 
-    formMessage.textContent = editingPerfumeId ? "Perfume actualizado correctamente." : "Perfume agregado correctamente.";
+    formMessage.textContent = editingPerfumeId ? "Producto actualizado correctamente." : "Producto agregado correctamente.";
     formMessage.style.color = "#65c77a";
     editingPerfumeId = null;
     perfumeForm.reset();
+    if (productType) productType.value = "Perfume";
+    setSelectedSeasons([]);
+    updateProductTypeFields();
     $("perfumeStock").checked = true;
     clearImagePreview();
     await loadPerfumes();
@@ -680,7 +715,7 @@ function renderAdminProducts(products) {
         card.className = "admin-product" + (perfume.premium ? " premium" : "");
 
         const brand = perfume.marcas?.nombre || "Sin marca";
-        const category = perfume.categorias?.nombre || "Sin categoría";
+        const category = (perfume.temporadas || []).join(", ") || perfume.categorias?.nombre || "Sin temporada";
 
         card.innerHTML = `
             <div class="admin-product-image">
@@ -689,7 +724,8 @@ function renderAdminProducts(products) {
             <div class="admin-product-info">
                 <h3>${escapeHTML(perfume.nombre)}</h3>
                 <p><b>Marca:</b> ${escapeHTML(brand)}</p>
-                <p><b>Género:</b> ${escapeHTML(perfume.genero)}</p>
+                <p><b>Tipo:</b> ${escapeHTML(perfume.tipo_producto || "Perfume")}</p>
+                ${((perfume.tipo_producto || "Perfume") === "Perfume") ? `<p><b>Género:</b> ${escapeHTML(perfume.genero)}</p>` : ""}
                 <p><b>Categoría:</b> ${escapeHTML(category)}</p>
                 <p><b>Acordes:</b> ${escapeHTML((perfume.acordes || []).join(", ") || "Sin acordes")}</p>
                 <div class="admin-product-price">${perfume.promocion_activa && Number(perfume.descuento_porcentaje)>0 ? `<del>${formatPrice(perfume.precio)}</del> ${formatPrice(Number(perfume.precio)*(1-Number(perfume.descuento_porcentaje)/100))} <span class="admin-promo-badge">${escapeHTML(perfume.descuento_porcentaje)}% OFF</span>` : formatPrice(perfume.precio)}</div>
@@ -720,10 +756,13 @@ function editPerfume(id) {
     document.querySelector("#perfumeFormSection .section-title h2").textContent = "EDITAR PERFUME";
 
     $("perfumeName").value = perfume.nombre || "";
+    if (productType) productType.value = perfume.tipo_producto || "Perfume";
+    updateProductTypeFields();
     $("perfumeGender").value = perfume.genero || "";
     populatePerfumeSelects();
     perfumeBrand.value = perfume.marca_id || "";
-    perfumeCategory.value = perfume.categoria_id || "";
+    perfumeCategory.value = "";
+    setSelectedSeasons(Array.isArray(perfume.temporadas) ? perfume.temporadas : []);
     $("perfumePrice").value = perfume.precio ?? "";
     $("perfumeDescription").value = perfume.descripcion || "";
     [1, 2, 3].forEach((n, i) => { const el = $(`perfumeAccord${n}`); if (el) el.value = (perfume.acordes || [])[i] || ""; });
@@ -790,7 +829,7 @@ perfumeImageFile?.addEventListener("change", function () {
 adminSearch?.addEventListener("input", function () {
     const term = this.value.toLowerCase().trim();
     const filtered = !term ? perfumes : perfumes.filter(p => {
-        const text = [p.nombre, p.genero, p.marcas?.nombre, p.categorias?.nombre].join(" ").toLowerCase();
+        const text = [p.nombre, p.genero, p.marcas?.nombre, p.categorias?.nombre, ...(p.temporadas || [])].join(" ").toLowerCase();
         return text.includes(term);
     });
     renderAdminProducts(filtered);

@@ -438,9 +438,9 @@ select {
 
     display: grid;
 
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 
-    gap: 25px;
+    gap: 18px;
 
 }
 
@@ -1542,17 +1542,18 @@ select {
 
 
     .category-grid {
-
-        grid-template-columns: 1fr;
-
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
     }
-
 
     .main-category {
-
-        min-height: 250px;
-
+        min-height: 175px;
+        padding: 14px 10px;
     }
+
+    .main-category h3 { font-size: clamp(16px, 4vw, 26px); }
+    .main-category p { font-size: 11px; }
+    .main-category span { font-size: 9px; }
 
 
     .contact-grid {
@@ -1857,21 +1858,17 @@ select {
        ================================ */
 
     .category-grid {
-
-        grid-template-columns: 1fr;
-
-        gap: 15px;
-
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
     }
-
 
     .main-category {
-
-        min-height: 200px;
-
-        padding: 25px;
-
+        min-height: 175px;
+        padding: 14px 10px;
     }
+
+    .main-category h3 { font-size: clamp(16px, 4vw, 26px); }
+    .main-category p { font-size: 11px; }
 
 
     .category-content span {
@@ -2980,3 +2977,98 @@ select {
 .product-modal-accords > strong { display:block; color: var(--gold, #d4af37); margin-bottom: 8px; letter-spacing: .08em; text-transform: uppercase; font-size: .82rem; }
 .product-modal-accords > div { display:flex; flex-wrap:wrap; gap:8px; }
 .product-modal-accords span { border:1px solid rgba(212,175,55,.5); border-radius:999px; padding:6px 12px; color:var(--white, #f5f5f5); background:rgba(212,175,55,.08); font-size:.88rem; }
+
+/* ==========================================================
+   ELIXIR HOUSE — PRESENTACIÓN EDITORIAL DE LUJO
+   Destacados a pantalla completa + colección premium realzada
+   ========================================================== */
+.featured-section{
+  padding: clamp(48px,6vw,82px) 0 38px;
+  background: radial-gradient(ellipse at 50% 0%,rgba(212,175,55,.09),transparent 48%),linear-gradient(180deg,#101010 0%,#070707 100%);
+  border-top:1px solid rgba(212,175,55,.25);border-bottom:1px solid rgba(212,175,55,.2);overflow:hidden
+}
+.featured-heading{padding:0 clamp(18px,6vw,90px);margin-bottom:30px;text-align:center}
+.featured-heading>p{color:var(--gold-light);letter-spacing:.32em;font-size:.72rem}
+.featured-heading h2{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3.2rem);letter-spacing:.045em;color:#f5e8b2}
+.featured-heading>span{display:block;color:#b9b3a5;margin-top:9px;font-size:.9rem}
+.featured-carousel-wrap{display:block;position:relative;width:100%;max-width:none;margin:0}
+.featured-carousel{display:flex;gap:0;width:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;padding:8px 0 24px}
+.featured-carousel::-webkit-scrollbar{display:none}
+.featured-carousel .featured-card{flex:0 0 100%;width:100%;min-width:100%;max-width:none;min-height:clamp(420px,42vw,570px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:0;scroll-snap-align:start;border:0;border-top:1px solid rgba(212,175,55,.32);border-bottom:1px solid rgba(212,175,55,.32);border-radius:0;background:linear-gradient(110deg,#14120d 0%,#0a0a0a 50%,#101010 100%);box-shadow:inset 0 0 80px rgba(212,175,55,.035);transform:none}
+.featured-carousel .featured-card:hover{transform:none;box-shadow:inset 0 0 100px rgba(212,175,55,.07)}
+.featured-carousel .featured-card .product-image{height:100%;min-height:clamp(420px,42vw,570px);background:radial-gradient(ellipse at center,rgba(212,175,55,.16),transparent 62%);padding:36px 9%;}
+.featured-carousel .featured-card .product-image img{width:100%;height:100%;max-height:470px;object-fit:contain;filter:drop-shadow(0 25px 28px rgba(0,0,0,.62))}
+.featured-carousel .featured-card .product-info{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(26px,6vw,90px);text-align:left}
+.featured-carousel .featured-card .product-gender{color:var(--gold-light);font-size:.7rem;letter-spacing:.24em}
+.featured-carousel .featured-card .product-brand{margin-top:16px;color:#c2a95f;font-size:.76rem;letter-spacing:.18em;text-transform:uppercase}
+.featured-carousel .featured-card .product-info h3{font-size:clamp(2.3rem,5vw,5rem);line-height:.98;color:#f8e7aa;margin-top:12px}
+.featured-carousel .featured-card .product-description{max-width:520px;min-height:0;margin-top:22px;color:#c5c0b4;font-size:.92rem;line-height:1.9}
+.featured-carousel .featured-card .product-bottom{width:100%;max-width:460px;margin-top:28px;justify-content:flex-start;flex-wrap:wrap;gap:22px}
+.featured-carousel .featured-card .product-price{font-family:'Cormorant Garamond',serif;font-size:clamp(1.6rem,2.6vw,2.35rem);color:#fff0bd}
+.featured-carousel .featured-card .request-button{padding:15px 28px;min-width:175px;background:linear-gradient(135deg,#f5dc82,#c29b2f);color:#100e08;border:1px solid #f8e7aa;font-weight:800;letter-spacing:.14em;box-shadow:0 8px 24px rgba(212,175,55,.15)}
+.featured-carousel .featured-card .request-button:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.featured-carousel .featured-card .stock{margin-top:18px;font-size:.68rem;letter-spacing:.14em}
+.featured-carousel .featured-card .product-tag{top:26px;left:26px;right:auto;padding:9px 14px;letter-spacing:.15em;font-size:.66rem}
+.featured-carousel .featured-card .favorite-button{top:24px;right:24px}
+.carousel-arrow{position:absolute;z-index:5;top:50%;transform:translateY(-50%);width:48px;height:48px;border:1px solid rgba(241,212,106,.75);background:rgba(5,5,5,.72);color:#f1d46a;box-shadow:0 6px 22px #0006;backdrop-filter:blur(8px)}
+.carousel-arrow:hover{transform:translateY(-50%) scale(1.06)}
+.carousel-prev{left:18px}.carousel-next{right:18px}
+.carousel-dots{margin-top:12px;gap:10px}.carousel-dot{width:7px;height:7px;background:#5b5545}.carousel-dot.active{width:24px;border-radius:8px;background:var(--gold-light);transform:none}
+.featured-empty{padding:65px 20px}
+
+/* Premium: tarjetas tipo vitrina con acento rubí y dorado */
+.premium-section{position:relative;padding:clamp(68px,8vw,120px) clamp(18px,5vw,76px);background:radial-gradient(ellipse at 50% 0%,rgba(139,0,21,.19),transparent 48%),linear-gradient(135deg,#100608 0%,#080808 55%,#12080a 100%);border-top:1px solid rgba(194,15,47,.55);border-bottom:1px solid rgba(194,15,47,.4)}
+.premium-title{margin-bottom:clamp(32px,5vw,62px)}
+.premium-title>p:first-child{color:#e6a0ab;font-size:.72rem;letter-spacing:.34em}
+.premium-title h2{font-size:clamp(2.7rem,5.7vw,5rem);letter-spacing:.025em;color:#f6e4b1;line-height:1}
+.premium-title h2 span{color:#f05a70;text-shadow:0 0 28px rgba(194,15,47,.22)}
+.ruby-line{width:100px;height:2px;background:linear-gradient(90deg,transparent,#e0445b,transparent)}
+.premium-description{max-width:560px;color:#c1b4b5;font-size:.92rem;line-height:1.8}
+.premium-grid{max-width:1320px;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:26px}
+.premium-card{position:relative;border:1px solid rgba(194,15,47,.58);background:linear-gradient(145deg,rgba(47,9,17,.94),#0b0b0c 62%);box-shadow:0 12px 32px rgba(0,0,0,.26);transition:transform .35s ease,border-color .35s ease,box-shadow .35s ease}
+.premium-card::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;border:1px solid rgba(255,210,170,.045)}
+.premium-card:hover{transform:translateY(-8px);border-color:#ed5269;box-shadow:0 22px 48px rgba(139,0,21,.24),0 0 0 1px rgba(194,15,47,.12)}
+.premium-card .product-image{height:310px;background:radial-gradient(ellipse at 50% 48%,rgba(194,15,47,.2),transparent 66%),linear-gradient(180deg,rgba(255,255,255,.015),transparent)}
+.premium-card .product-image img{filter:drop-shadow(0 14px 18px rgba(0,0,0,.6))}
+.premium-card .product-info{padding:25px;background:linear-gradient(180deg,rgba(22,8,11,.15),rgba(0,0,0,.18))}
+.premium-card .product-gender{color:#e3a3ad;letter-spacing:.2em}
+.premium-card .product-brand{color:#c58b94;letter-spacing:.13em}
+.premium-card .product-info h3{color:#ffe9c0;font-size:clamp(1.8rem,2.4vw,2.15rem)}
+.premium-card .product-description{color:#b8abad}
+.premium-card .product-price{color:#f5d78b}
+.premium-card .request-button{background:linear-gradient(135deg,#a90020,#710014);border:1px solid #d7445b;color:#fff3e4;letter-spacing:.1em}
+.premium-card .request-button:hover{background:linear-gradient(135deg,#d51b3b,#8b0015)}
+.premium-card .product-tag.ruby{background:linear-gradient(135deg,#d32646,#750018);color:#fff4e7;border:1px solid #e95b70;box-shadow:0 5px 18px rgba(139,0,21,.4)}
+
+@media(max-width:700px){
+ .featured-section{padding-top:48px}.featured-heading{padding:0 18px;margin-bottom:22px}
+ .featured-carousel .featured-card{grid-template-columns:1fr;grid-template-rows: minmax(230px,42vh) auto;min-height:0}
+ .featured-carousel .featured-card .product-image{min-height:230px;height:42vh;max-height:340px;padding:28px 14% 10px}
+ .featured-carousel .featured-card .product-image img{max-height:300px}
+ .featured-carousel .featured-card .product-info{padding:22px 26px 32px;align-items:center;text-align:center}
+ .featured-carousel .featured-card .product-info h3{font-size:clamp(2.2rem,10vw,3.2rem)}
+ .featured-carousel .featured-card .product-description{font-size:.84rem;margin-top:14px}
+ .featured-carousel .featured-card .product-bottom{justify-content:center;margin-top:20px;gap:14px}
+ .featured-carousel .featured-card .product-tag{top:14px;left:14px;padding:7px 10px}
+ .featured-carousel .featured-card .favorite-button{top:12px;right:12px;width:34px;height:34px}
+ .carousel-prev{left:8px}.carousel-next{right:8px}.carousel-arrow{width:34px;height:34px;font-size:1.55rem}
+ .premium-section{padding-left:16px;padding-right:16px}.premium-grid{grid-template-columns:1fr;gap:20px}
+ .premium-card .product-image{height:290px}
+}
+
+
+/* ELIXIR HOUSE - selector de temporadas y tipo de producto */
+.season-selector-group { margin-top: 4px; }
+.season-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.season-option { cursor: pointer; }
+.season-option input { position: absolute; opacity: 0; pointer-events: none; }
+.season-option span { display: flex; min-height: 46px; align-items: center; justify-content: center; text-align: center; padding: 10px 8px; border: 1px solid rgba(212,175,55,.35); border-radius: 10px; color: #d4af37; background: #0d0d0d; font-size: 12px; font-weight: 700; letter-spacing: .04em; transition: .2s ease; }
+.season-option input:checked + span { background: linear-gradient(135deg, #d4af37, #f1d46a); color: #080808; border-color: #ffe58a; box-shadow: 0 0 14px rgba(212,175,55,.22); }
+.season-option input:focus-visible + span { outline: 2px solid #ffe58a; outline-offset: 3px; }
+.legacy-category-select { display: none !important; }
+.product-type-select { min-height: 48px; border: 1px solid #d4af37 !important; color: #f1d46a !important; font-weight: 700; background-color: #0d0d0d !important; }
+.optional-label { color: #aaa; font-size: 11px; font-weight: 400; }
+@media (max-width: 600px) { .season-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.fixed-seasons-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
+.fixed-seasons-list span { padding:13px 10px; text-align:center; border:1px solid rgba(212,175,55,.35); border-radius:10px; color:#f1d46a; background:#0d0d0d; font-weight:700; letter-spacing:.04em; }

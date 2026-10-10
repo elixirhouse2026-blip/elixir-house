@@ -8,7 +8,6 @@ let filteredPerfumes = [];
 let vendedores = [];
 let pendingWhatsAppRequest = null;
 let favorites = new Set(JSON.parse(localStorage.getItem("elixirFavorites") || "[]"));
-let compareItems = new Set(JSON.parse(localStorage.getItem("elixirCompare") || "[]"));
 let recentlyViewed = JSON.parse(localStorage.getItem("elixirRecentlyViewed") || "[]");
 
 const DEFAULT_SELLERS = [
@@ -48,10 +47,6 @@ const favoritesToggle = document.getElementById("favoritesToggle");
 const favoritesCount = document.getElementById("favoritesCount");
 const recentGrid = document.getElementById("recentGrid");
 const recentSection = document.getElementById("recentSection");
-const compareBar = document.getElementById("compareBar");
-const compareCount = document.getElementById("compareCount");
-const compareModal = document.getElementById("compareModal");
-const compareContent = document.getElementById("compareContent");
 const featuredCarousel = document.getElementById("featuredCarousel");
 const featuredDots = document.getElementById("featuredDots");
 let featuredIndex = 0;
@@ -67,28 +62,6 @@ function formatPrice(price) {
 function saveFavorites() {
     localStorage.setItem("elixirFavorites", JSON.stringify([...favorites]));
     updateFavoritesUI();
-}
-
-function saveCompare() {
-    localStorage.setItem("elixirCompare", JSON.stringify([...compareItems]));
-    updateCompareUI();
-}
-
-function updateCompareUI() {
-    if (compareCount) compareCount.textContent = compareItems.size;
-    compareBar?.classList.toggle("hidden", compareItems.size < 2);
-}
-
-function toggleCompare(id) {
-    const key = String(id);
-    if (compareItems.has(key)) {
-        compareItems.delete(key);
-    } else {
-        if (compareItems.size >= 3) { alert("Podés comparar hasta 3 perfumes."); return; }
-        compareItems.add(key);
-    }
-    saveCompare();
-    renderProducts(filteredPerfumes);
 }
 
 function rememberViewed(perfume) {
@@ -117,24 +90,6 @@ function sharePerfume(perfume) {
     }
 }
 
-function openCompareModal() {
-    if (!compareModal || !compareContent) return;
-    const items = [...compareItems].map(id => perfumes.find(p => String(p.id) === String(id))).filter(Boolean);
-    if (items.length < 2) return;
-    compareContent.innerHTML = items.map(p => `
-        <div class="compare-column">
-            <div class="compare-image">${p.imagen ? `<img src="${escapeHTML(p.imagen)}" alt="${escapeHTML(p.nombre)}">` : "ELIXIR"}</div>
-            <h3>${escapeHTML(p.nombre)}</h3>
-            <p>${escapeHTML(p.marca)}</p>
-            <strong>${formatPrice(p.precio)}</strong>
-            <span>${escapeHTML(p.genero)} · ${escapeHTML(p.categoria)}</span>
-            <span class="${p.stock ? "compare-stock-ok" : "compare-stock-no"}">${p.stock ? "● DISPONIBLE" : "● SIN STOCK"}</span>
-        </div>`).join("");
-    compareModal.classList.remove("hidden");
-    compareModal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("modal-open");
-}
-
 function updateFavoritesUI() {
     if (favoritesCount) favoritesCount.textContent = favorites.size;
     const mobileCount = document.getElementById("mobileFavoritesCount");
@@ -159,7 +114,7 @@ async function loadPerfumes() {
         const result = await supabaseClient
             .from("perfumes")
             .select(`
-                id, nombre, genero, precio, descripcion, acordes, imagen, stock, premium,
+                id, nombre, tipo_producto, genero, precio, descripcion, acordes, imagen, stock, premium, temporadas,
                 marca_id, categoria_id, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
                 marcas (id, nombre),
                 categorias (id, nombre, genero)
@@ -174,8 +129,10 @@ async function loadPerfumes() {
                 nombre: p.nombre || "Sin nombre",
                 marca: p.marcas ? p.marcas.nombre : "Sin marca",
                 marca_id: p.marca_id,
+                tipo_producto: p.tipo_producto || "Perfume",
                 genero: p.genero || "",
-                categoria: p.categorias ? p.categorias.nombre : "Sin categoría",
+                temporadas: Array.isArray(p.temporadas) ? p.temporadas : [],
+                categoria: Array.isArray(p.temporadas) && p.temporadas.length ? p.temporadas.join(", ") : (p.categorias ? p.categorias.nombre : "Sin categoría"),
                 categoria_id: p.categoria_id,
                 precio: Number(p.precio) || 0,
                 descripcion: p.descripcion || "",
@@ -212,7 +169,7 @@ function showConnectionError() {
 }
 
 function buildDynamicFilters() {
-    const categories = [...new Set(perfumes.map(p => p.categoria).filter(x => x && x !== "Sin categoría"))].sort();
+    const categories = ["Verano", "Invierno", "Otoño", "Primavera"];
     const brands = [...new Set(perfumes.map(p => p.marca).filter(x => x && x !== "Sin marca"))].sort();
 
     if (categoryFilter) {
@@ -245,8 +202,7 @@ function renderSubcategories() {
     const current = subcategoryButtons.querySelector(".subcategory-button.active")?.dataset.subcategory || "todos";
     const categories = [...new Map(
         perfumes
-            .filter(p => p.categoria && p.categoria !== "Sin categoría")
-            .map(p => [p.categoria, p.genero])
+            .flatMap(p => (p.temporadas || []).map(season => [season, p.genero]))
     )].sort((a, b) => a[0].localeCompare(b[0], "es"));
 
     subcategoryButtons.innerHTML = "";
@@ -305,9 +261,9 @@ function filterProducts() {
         return (
             (!search || haystack.includes(search)) &&
             (gender === "todos" || p.genero === gender) &&
-            (category === "todos" || p.categoria === category) &&
+            (category === "todos" || (p.temporadas || []).includes(category)) &&
             (brand === "todos" || p.marca === brand) &&
-            (subcategory === "todos" || p.categoria === subcategory) &&
+            (subcategory === "todos" || (p.temporadas || []).includes(subcategory)) &&
             (!onlyFavorites || isFavorite(p.id))
         );
     });
@@ -358,11 +314,11 @@ function renderFeaturedCarousel() {
         }
     }
 }
-function visibleFeaturedCards() { return window.matchMedia("(max-width: 620px)").matches ? 1 : window.matchMedia("(max-width: 1000px)").matches ? 2 : 3; }
+function visibleFeaturedCards() { return 1; }
 function scrollFeatured() {
     if (!featuredCarousel) return;
     const card=featuredCarousel.querySelector(".featured-card");
-    if (card) featuredCarousel.scrollTo({left: featuredIndex * visibleFeaturedCards() * (card.getBoundingClientRect().width + 18), behavior:"smooth"});
+    if (card) featuredCarousel.scrollTo({left: featuredIndex * visibleFeaturedCards() * (card.getBoundingClientRect().width), behavior:"smooth"});
     featuredDots?.querySelectorAll(".carousel-dot").forEach((d,i)=>d.classList.toggle("active",i===featuredIndex));
 }
 document.getElementById("featuredPrev")?.addEventListener("click",()=>{const count=featuredDots?.children.length||0;featuredIndex=Math.max(0,featuredIndex-1);scrollFeatured();});
@@ -406,16 +362,6 @@ function createProductCard(perfume, compact = false) {
     });
     imageContainer.appendChild(favorite);
 
-    const compare = document.createElement("button");
-    compare.type = "button";
-    compare.className = "compare-button" + (compareItems.has(String(perfume.id)) ? " active" : "");
-    compare.textContent = compareItems.has(String(perfume.id)) ? "✓" : "⇄";
-    compare.title = "Comparar perfume";
-    compare.addEventListener("click", function (event) {
-        event.stopPropagation();
-        toggleCompare(perfume.id);
-    });
-    imageContainer.appendChild(compare);
 
     if (perfume.imagen) {
         const image = document.createElement("img");
@@ -442,7 +388,7 @@ function createProductCard(perfume, compact = false) {
 
     const gender = document.createElement("div");
     gender.className = "product-gender";
-    gender.textContent = perfume.genero;
+    gender.textContent = (perfume.tipo_producto || "Perfume") === "Perfume" ? perfume.genero : "OTRO PRODUCTO";
 
     const brand = document.createElement("div");
     brand.className = "product-brand";
@@ -494,7 +440,7 @@ function renderProducts(products) {
     products.filter(p => p.premium).forEach(p => premiumGrid.appendChild(createProductCard(p)));
     renderFeaturedCarousel();
 
-    if (productCount) productCount.textContent = products.length === 1 ? "1 perfume" : `${products.length} perfumes`;
+    if (productCount) productCount.textContent = products.length === 1 ? "1 producto" : `${products.length} productos`;
     if (noResults) noResults.style.display = products.length ? "none" : "block";
 }
 
@@ -512,9 +458,10 @@ async function loadVendedores() {
 
 function buildPerfumeMessage(perfume) {
     if (!perfume) return SELLER_FALLBACK_MESSAGE;
-    let message = "Hola Elixir House! 👋\n\nQuiero solicitar este perfume:\n\n✨ " + perfume.nombre;
+    const isPerfume = (perfume.tipo_producto || "Perfume") === "Perfume";
+    let message = "Hola Elixir House! 👋\n\nQuiero consultar por este " + (isPerfume ? "perfume" : "producto") + ":\n\n✨ " + perfume.nombre;
     if (perfume.marca && perfume.marca !== "Sin marca") message += "\n🏷️ Marca: " + perfume.marca;
-    if (perfume.genero) message += "\n👤 " + perfume.genero;
+    if (isPerfume && perfume.genero) message += "\n👤 " + perfume.genero;
     if (perfume.categoria && perfume.categoria !== "Sin categoría") message += "\n🌿 Categoría: " + perfume.categoria;
     message += "\n💰 Precio: " + formatPrice(effectivePrice(perfume));
     if (promoIsActive(perfume)) message += `\n🏷️ Promoción: ${perfume.descuento_porcentaje}% OFF (antes ${formatPrice(perfume.precio)})`;
@@ -590,7 +537,7 @@ function openProductModal(perfume) {
                 </button>
                 <button type="button" class="modal-share">↗ COMPARTIR</button>
             </div>
-            <span class="product-modal-gender">${escapeHTML(perfume.genero)}</span>
+            <span class="product-modal-gender">${escapeHTML((perfume.tipo_producto || "Perfume") === "Perfume" ? perfume.genero : "OTRO PRODUCTO")}</span>
             <div class="product-modal-brand">${escapeHTML(perfume.marca)}</div>
             <h2>${escapeHTML(perfume.nombre)}</h2>
             <p class="product-modal-meta">${escapeHTML(perfume.categoria)}</p>
@@ -650,18 +597,10 @@ function formatDisplayPhone(phone) {
     return digits;
 }
 
-function closeCompareModal() {
-    if (!compareModal) return;
-    compareModal.classList.add("hidden");
-    compareModal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-open");
-}
-
 function closeOnEscape(event) {
     if (event.key !== "Escape") return;
     if (sellerModal && !sellerModal.classList.contains("hidden")) closeSellerChooser();
     else if (productModal && !productModal.classList.contains("hidden")) closeProductModalChooser();
-    else if (compareModal && !compareModal.classList.contains("hidden")) closeCompareModal();
 }
 
 closeProductModal?.addEventListener("click", closeProductModalChooser);
@@ -673,10 +612,6 @@ document.addEventListener("keydown", closeOnEscape);
 footerWhatsappButton?.addEventListener("click", () => openSellerModal(null, false));
 footerWhatsappButtonBottom?.addEventListener("click", () => openSellerModal(null, false));
 
-document.getElementById("openCompare")?.addEventListener("click", openCompareModal);
-document.getElementById("closeCompare")?.addEventListener("click", closeCompareModal);
-document.querySelector(".compare-backdrop")?.addEventListener("click", closeCompareModal);
-document.getElementById("clearCompare")?.addEventListener("click", function () { compareItems.clear(); saveCompare(); renderProducts(filteredPerfumes); });
 document.getElementById("mobileWhatsappButton")?.addEventListener("click", () => openSellerModal(null, false));
 document.getElementById("floatingWhatsapp")?.addEventListener("click", () => openSellerModal(null, false));
 document.getElementById("mobileFavoritesButton")?.addEventListener("click", function () {
@@ -724,6 +659,5 @@ if (menuBtn && nav) {
 }
 
 updateFavoritesUI();
-updateCompareUI();
 loadVendedores();
 loadPerfumes().then(renderRecentlyViewed);

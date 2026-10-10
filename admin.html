@@ -258,13 +258,21 @@
 
                 <form id="perfumeForm">
 
+                    <div class="form-group full-width">
+                        <label for="productType">¿QUÉ VAS A AGREGAR?</label>
+                        <select id="productType" class="product-type-select" required>
+                            <option value="Perfume">🧴 Perfume</option>
+                            <option value="Otro producto">📦 Otro producto (muestras, accesorios, etc.)</option>
+                        </select>
+                        <small class="management-help">Elegí “Perfume” para fragancias o “Otro producto” para muestras, accesorios y artículos futuros.</small>
+                    </div>
 
                     <!-- NOMBRE -->
 
                     <div class="form-group">
 
-                        <label for="perfumeName">
-                            Nombre del perfume
+                        <label for="perfumeName" id="productNameLabel">
+                            Nombre del producto
                         </label>
 
                         <input
@@ -302,7 +310,7 @@
 
                     <!-- GÉNERO -->
 
-                    <div class="form-group">
+                    <div class="form-group" id="genderField">
 
                         <label for="perfumeGender">
                             Género
@@ -335,24 +343,17 @@
 
 
 
-                    <!-- CATEGORÍA -->
-
-                    <div class="form-group">
-
-                        <label for="perfumeCategory">
-                            Categoría
-                        </label>
-
-                        <select
-                            id="perfumeCategory"
-                        >
-
-                            <option value="">
-                                Seleccionar categoría
-                            </option>
-
-                        </select>
-
+                    <!-- TEMPORADAS / CATEGORÍAS -->
+                    <div class="form-group full-width season-selector-group">
+                        <label>Temporadas del perfume <span class="optional-label">(elegí 1 o 2)</span></label>
+                        <div class="season-options" id="seasonOptions">
+                            <label class="season-option"><input type="checkbox" name="temporadas" value="Verano"><span>☀ VERANO</span></label>
+                            <label class="season-option"><input type="checkbox" name="temporadas" value="Invierno"><span>❄ INVIERNO</span></label>
+                            <label class="season-option"><input type="checkbox" name="temporadas" value="Otoño"><span>🍂 OTOÑO</span></label>
+                            <label class="season-option"><input type="checkbox" name="temporadas" value="Primavera"><span>✿ PRIMAVERA</span></label>
+                        </div>
+                        <small class="management-help">Podés asignarle una temporada o combinar dos. Estas serán las únicas categorías del catálogo.</small>
+                        <select id="perfumeCategory" class="legacy-category-select" aria-hidden="true" tabindex="-1"><option value="">Sin categoría antigua</option></select>
                     </div>
 
 
@@ -394,7 +395,7 @@
 
                     </div>
 
-                    <div class="form-group full-width">
+                    <div class="form-group full-width" id="accordsField">
                         <label for="perfumeAccord1">Acordes (de 1 a 3)</label>
                         <div class="accord-inputs">
                             <input type="text" id="perfumeAccord1" maxlength="40" placeholder="Acorde 1 (obligatorio)">
@@ -569,52 +570,13 @@
 
 
 
-                    <!-- ================================
-                         CATEGORÍAS
-                    ================================= -->
-
+                    <!-- TEMPORADAS FIJAS DEL CATÁLOGO -->
                     <div class="management-box">
-
-                        <div class="section-title">
-
-                            <h2>
-                                CATEGORÍAS
-                            </h2>
-
+                        <div class="section-title"><h2>TEMPORADAS DEL CATÁLOGO</h2></div>
+                        <p class="management-help">Estas son las cuatro categorías disponibles para los perfumes. Al cargar o editar uno, podés elegir una o dos.</p>
+                        <div class="fixed-seasons-list">
+                            <span>☀ VERANO</span><span>❄ INVIERNO</span><span>🍂 OTOÑO</span><span>✿ PRIMAVERA</span>
                         </div>
-
-
-                        <form id="categoryForm">
-
-                            <div class="form-group">
-
-                                <label for="categoryName">
-                                    Nombre de la categoría
-                                </label>
-
-                                <input
-                                    type="text"
-                                    id="categoryName"
-                                    placeholder="Ej: Amaderados"
-                                    required
-                                >
-
-                            </div>
-
-
-
-
-                            <button id="categorySubmitButton" type="submit" class="primary-button">
-                                + AGREGAR CATEGORÍA
-                            </button>
-                            <button id="categoryCancelEdit" type="button" class="secondary-button hidden">CANCELAR EDICIÓN</button>
-
-                        </form>
-
-
-                        <p class="management-help">Las categorías son independientes del género. Al cargar cada perfume elegís si es Hombre, Mujer o Unisex. Si una categoría está en uso, primero reasigná esos perfumes.</p>
-                        <div id="categoriesList" class="management-list"></div>
-
                     </div>
 
                 </div>
