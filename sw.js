@@ -1,4 +1,4 @@
-const CACHE_NAME = "elixir-house-v5";
+const CACHE_NAME = "elixir-house-v6-promo-fix";
 const APP_SHELL = [
     "./",
     "./index.html",

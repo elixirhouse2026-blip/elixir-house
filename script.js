@@ -184,8 +184,8 @@ async function loadPerfumes() {
                 stock: p.stock === true,
                 premium: p.premium === true,
                 destacado: p.destacado === true,
-                promocion_activa: p.promocion_activa === true,
-                descuento_porcentaje: Math.min(90, Math.max(0, Number(p.descuento_porcentaje) || 0)),
+                promocion_activa: p.promocion_activa === true || p.promocion_activa === "true" || p.promocion_activa === 1 || p.promocion_activa === "1",
+                descuento_porcentaje: Math.min(90, Math.max(0, Number(p.descuento_porcentaje ?? p.descuento ?? 0) || 0)),
                 promocion_inicio: p.promocion_inicio || null,
                 promocion_fin: p.promocion_fin || null
             };
@@ -317,14 +317,21 @@ function filterProducts() {
 }
 
 function promoIsActive(perfume) {
-    if (perfume?.promocion_activa !== true || !(Number(perfume.descuento_porcentaje) > 0)) return false;
-    // Comparar fechas como fechas locales (YYYY-MM-DD) evita diferencias de zona horaria.
-    const today = new Date();
-    const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    const start = perfume.promocion_inicio ? String(perfume.promocion_inicio).slice(0, 10) : "";
-    const end = perfume.promocion_fin ? String(perfume.promocion_fin).slice(0, 10) : "";
-    if (start && localToday < start) return false;
-    if (end && localToday > end) return false;
+    // Acepta el booleano de Supabase y también valores serializados como texto.
+    const enabled = perfume?.promocion_activa === true ||
+        perfume?.promocion_activa === "true" ||
+        perfume?.promocion_activa === 1 ||
+        perfume?.promocion_activa === "1";
+    const discount = Number(perfume?.descuento_porcentaje ?? perfume?.descuento ?? 0);
+    if (!enabled || !Number.isFinite(discount) || discount <= 0) return false;
+
+    // Las fechas son opcionales; sin fechas, la promoción está activa inmediatamente.
+    const todayDate = new Date();
+    const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, "0")}-${String(todayDate.getDate()).padStart(2, "0")}`;
+    const start = perfume?.promocion_inicio ? String(perfume.promocion_inicio).slice(0, 10) : "";
+    const end = perfume?.promocion_fin ? String(perfume.promocion_fin).slice(0, 10) : "";
+    if (start && today < start) return false;
+    if (end && today > end) return false;
     return true;
 }
 function effectivePrice(perfume) {
