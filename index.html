@@ -182,7 +182,7 @@
         <section class="featured-section" id="destacados">
             <div class="section-title featured-heading">
                 <p>SELECCIÓN ELIXIR</p>
-                <h2>PERFUMES DESTACADOS</h2>
+                <h2>DESTACADOS ELIXIR</h2>
                 <span>Una selección especial para descubrir tu próximo aroma.</span>
             </div>
             <div class="featured-carousel-wrap">
@@ -288,6 +288,27 @@
              CATÁLOGO
              ============================================ -->
 
+        <!-- RECOMENDADOR DE AROMAS -->
+        <section class="scent-finder-section" id="encontra-tu-aroma">
+            <div class="scent-finder-copy">
+                <p class="eyebrow">UNA EXPERIENCIA ELIXIR</p>
+                <h2>ENCONTRÁ TU <span>AROMA</span></h2>
+                <p>Elegí tu estilo, género y temporada. Te mostramos opciones disponibles en nuestro catálogo.</p>
+            </div>
+            <div class="scent-finder-controls">
+                <label>¿Para quién?
+                    <select id="finderGender"><option value="todos">Cualquier género</option><option>Hombre</option><option>Mujer</option><option>Unisex</option></select>
+                </label>
+                <label>¿Qué estilo buscás?
+                    <select id="finderAccord"><option value="todos">Cualquier aroma</option><option value="dulce">Dulce</option><option value="fresco">Fresco / cítrico</option><option value="amaderado">Amaderado</option><option value="floral">Floral</option><option value="especiado">Especiado</option><option value="intenso">Intenso / oriental</option></select>
+                </label>
+                <label>Temporada
+                    <select id="finderSeason"><option value="todos">Todas las temporadas</option><option>Verano</option><option>Otoño</option><option>Invierno</option><option>Primavera</option></select>
+                </label>
+                <button type="button" id="findMyAroma" class="gold-button">ENCONTRAR MI AROMA</button>
+            </div>
+        </section>
+
         <section
             class="catalog-section"
             id="catalogo"
@@ -346,6 +367,13 @@
                 </div>
 
 
+
+                <!-- TIPO DE PRODUCTO -->
+                <select id="typeFilter" aria-label="Tipo de producto">
+                    <option value="todos">Todos los productos</option>
+                    <option value="Perfume">Perfumes</option>
+                    <option value="Otro producto">Otros productos</option>
+                </select>
 
                 <!-- GÉNERO -->
 
@@ -794,9 +822,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="supabase.js?v=promo-fix-6"></script>
+<script src="supabase.js?v=tienda-premium-20261010"></script>
 
-<script src="script.js?v=promo-fix-6"></script>
+<script src="script.js?v=tienda-premium-20261010"></script>
 <script>
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

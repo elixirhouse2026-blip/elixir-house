@@ -10,6 +10,7 @@ let categorias = [];
 let vendedores = [];
 let ventas = [];
 let editingPerfumeId = null;
+let duplicatedImageURL = null;
 let editingBrandId = null;
 let editingCategoryId = null;
 
@@ -630,7 +631,7 @@ perfumeForm?.addEventListener("submit", async function (event) {
         formMessage.style.color = "#ff6b6b"; return;
     }
 
-    let imagen = null;
+    let imagen = duplicatedImageURL || null;
     if (editingPerfumeId) {
         const current = perfumes.find(p => String(p.id) === String(editingPerfumeId));
         imagen = current?.imagen || null;
@@ -685,6 +686,7 @@ perfumeForm?.addEventListener("submit", async function (event) {
     }
 
     formMessage.textContent = editingPerfumeId ? "Producto actualizado correctamente." : "Producto agregado correctamente.";
+    duplicatedImageURL = null;
     formMessage.style.color = "#65c77a";
     editingPerfumeId = null;
     perfumeForm.reset();
@@ -736,6 +738,7 @@ function renderAdminProducts(products) {
                 </div>
                 <div class="product-actions">
                     <button type="button" class="edit-button" data-id="${perfume.id}">EDITAR</button>
+                    <button type="button" class="duplicate-button" data-id="${perfume.id}">DUPLICAR</button>
                     <button type="button" class="delete-button" data-id="${perfume.id}">ELIMINAR</button>
                 </div>
             </div>
@@ -745,7 +748,22 @@ function renderAdminProducts(products) {
     });
 
     adminProducts.querySelectorAll(".edit-button").forEach(btn => btn.addEventListener("click", () => editPerfume(btn.dataset.id)));
+    adminProducts.querySelectorAll(".duplicate-button").forEach(btn => btn.addEventListener("click", () => duplicatePerfume(btn.dataset.id)));
     adminProducts.querySelectorAll(".delete-button").forEach(btn => btn.addEventListener("click", () => deletePerfume(btn.dataset.id)));
+}
+
+function duplicatePerfume(id) {
+    const perfume = perfumes.find(p => String(p.id) === String(id));
+    if (!perfume) return;
+    editPerfume(id);
+    duplicatedImageURL = perfume.imagen || null;
+    editingPerfumeId = null;
+    const title = document.querySelector("#perfumeFormSection .section-title h2");
+    if (title) title.textContent = "DUPLICAR PRODUCTO";
+    const name = $("perfumeName");
+    if (name) name.value = `${perfume.nombre} - copia`;
+    if (formMessage) formMessage.textContent = "Se creará un producto nuevo. Revisá el nombre, precio y stock antes de guardar.";
+    perfumeFormSection?.scrollIntoView({ behavior: "smooth" });
 }
 
 function editPerfume(id) {
@@ -829,7 +847,7 @@ perfumeImageFile?.addEventListener("change", function () {
 adminSearch?.addEventListener("input", function () {
     const term = this.value.toLowerCase().trim();
     const filtered = !term ? perfumes : perfumes.filter(p => {
-        const text = [p.nombre, p.genero, p.marcas?.nombre, p.categorias?.nombre, ...(p.temporadas || [])].join(" ").toLowerCase();
+        const text = [p.nombre, p.genero, p.tipo_producto, p.descripcion, p.marcas?.nombre, p.categorias?.nombre, ...(p.acordes || []), ...(p.temporadas || [])].join(" ").toLowerCase();
         return text.includes(term);
     });
     renderAdminProducts(filtered);

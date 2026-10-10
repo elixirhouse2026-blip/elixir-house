@@ -22,6 +22,7 @@ const productsGrid = document.getElementById("productsGrid");
 const premiumGrid = document.getElementById("premiumGrid");
 const searchInput = document.getElementById("searchInput");
 const genderFilter = document.getElementById("genderFilter");
+const typeFilter = document.getElementById("typeFilter");
 const categoryFilter = document.getElementById("categoryFilter");
 const brandFilter = document.getElementById("brandFilter");
 const sortFilter = document.getElementById("sortFilter");
@@ -251,16 +252,29 @@ function applySort(items) {
 function filterProducts() {
     const search = searchInput?.value.toLowerCase().trim() || "";
     const gender = genderFilter?.value || "todos";
+    const type = typeFilter?.value || "todos";
     const category = categoryFilter?.value || "todos";
     const brand = brandFilter?.value || "todos";
     const subcategory = getActiveSubcategory();
     const onlyFavorites = favoritesToggle?.dataset.active === "true";
+    const finderAccord = document.getElementById("finderAccord")?.value || "todos";
+    const accordKeywords = {
+        dulce: ["dulce", "vainilla", "caramelo", "gourmand", "praliné", "praline", "tonka"],
+        fresco: ["fresco", "cítrico", "citrico", "acuático", "acuatico", "marino", "bergamota", "limón", "limon", "mandarina"],
+        amaderado: ["amaderado", "madera", "cedro", "sándalo", "sandalo", "vetiver", "oud", "pachulí", "pachuli"],
+        floral: ["floral", "rosa", "jazmín", "jazmin", "flor", "peonía", "peonia", "neroli"],
+        especiado: ["especiado", "especias", "canela", "pimienta", "cardamomo", "clavo"],
+        intenso: ["oriental", "ámbar", "ambar", "incienso", "oud", "intenso", "cuero", "tabaco", "resina"]
+    };
 
     filteredPerfumes = perfumes.filter(function (p) {
-        const haystack = [p.nombre, p.marca, p.descripcion, p.categoria, p.genero].join(" ").toLowerCase();
+        const haystack = [p.nombre, p.marca, p.descripcion, p.categoria, p.genero, p.tipo_producto, ...(p.acordes || []), ...(p.temporadas || [])].join(" ").toLowerCase();
+        const accordMatch = finderAccord === "todos" || (accordKeywords[finderAccord] || [finderAccord]).some(keyword => haystack.includes(keyword));
         return (
             (!search || haystack.includes(search)) &&
-            (gender === "todos" || p.genero === gender) &&
+            accordMatch &&
+            (type === "todos" || (type === "Otro producto" ? (p.tipo_producto || "Perfume") !== "Perfume" : (p.tipo_producto || "Perfume") === type)) &&
+            (gender === "todos" || (p.tipo_producto || "Perfume") !== "Perfume" || p.genero === gender) &&
             (category === "todos" || (p.temporadas || []).includes(category)) &&
             (brand === "todos" || p.marca === brand) &&
             (subcategory === "todos" || (p.temporadas || []).includes(subcategory)) &&
@@ -367,7 +381,8 @@ function createProductCard(perfume, compact = false) {
         const image = document.createElement("img");
         image.src = perfume.imagen;
         image.alt = perfume.nombre;
-        image.loading = "lazy";
+        image.loading = compact ? "lazy" : "lazy";
+        image.decoding = "async";
         image.onerror = function () {
             image.style.display = "none";
             const placeholder = document.createElement("div");
@@ -621,6 +636,7 @@ document.getElementById("mobileFavoritesButton")?.addEventListener("click", func
 });
 
 searchInput?.addEventListener("input", filterProducts);
+typeFilter?.addEventListener("change", filterProducts);
 genderFilter?.addEventListener("change", function () {
     subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
@@ -629,6 +645,22 @@ genderFilter?.addEventListener("change", function () {
 categoryFilter?.addEventListener("change", filterProducts);
 brandFilter?.addEventListener("change", filterProducts);
 sortFilter?.addEventListener("change", filterProducts);
+
+document.getElementById("findMyAroma")?.addEventListener("click", function () {
+    const finderGender = document.getElementById("finderGender")?.value || "todos";
+    const finderAccord = document.getElementById("finderAccord")?.value || "todos";
+    const finderSeason = document.getElementById("finderSeason")?.value || "todos";
+    if (genderFilter) genderFilter.value = finderGender;
+    if (typeFilter) typeFilter.value = "Perfume";
+    if (categoryFilter) categoryFilter.value = finderSeason;
+    if (searchInput) searchInput.value = "";
+    favoritesToggle?.setAttribute("data-active", "false");
+    favoritesToggle?.classList.remove("active");
+    subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
+    subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
+    filterProducts();
+    document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" });
+});
 
 favoritesToggle?.addEventListener("click", function () {
     const active = favoritesToggle.dataset.active === "true";
@@ -639,6 +671,7 @@ favoritesToggle?.addEventListener("click", function () {
 
 mainCategories.forEach(category => category.addEventListener("click", function () {
     if (genderFilter) genderFilter.value = category.dataset.gender;
+    if (typeFilter) typeFilter.value = "Perfume";
     if (categoryFilter) categoryFilter.value = "todos";
     subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");

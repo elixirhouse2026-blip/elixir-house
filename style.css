@@ -3072,3 +3072,61 @@ select {
 
 .fixed-seasons-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
 .fixed-seasons-list span { padding:13px 10px; text-align:center; border:1px solid rgba(212,175,55,.35); border-radius:10px; color:#f1d46a; background:#0d0d0d; font-weight:700; letter-spacing:.04em; }
+
+
+/* ============================================
+   ELIXIR HOUSE — PULIDO PREMIUM 2026
+   ============================================ */
+:root { scroll-behavior:smooth; }
+body { background:#070707; }
+.hero { min-height:min(92vh,900px); background:radial-gradient(ellipse at 76% 48%,rgba(212,175,55,.15),transparent 29%),radial-gradient(ellipse at 92% 74%,rgba(139,0,21,.15),transparent 26%),linear-gradient(115deg,#070707 0%,#0c0b09 55%,#10090b 100%); }
+.hero::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.15; background:linear-gradient(90deg,transparent 49.8%,rgba(212,175,55,.14) 50%,transparent 50.2%); mask-image:linear-gradient(to bottom,transparent,#000 25%,#000 70%,transparent); }
+.hero-content { max-width:760px; }
+.hero-small,.eyebrow { color:var(--gold-light); letter-spacing:.28em; font-size:10px; font-weight:700; }
+.hero h1 { text-shadow:0 8px 45px rgba(212,175,55,.14); }
+.gold-button { border-radius:2px; box-shadow:0 8px 28px rgba(212,175,55,.08); }
+.gold-button:hover { box-shadow:0 10px 32px rgba(212,175,55,.2); }
+.section-title h2 { letter-spacing:.09em; }
+.category-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; max-width:1400px; margin-inline:auto; }
+.main-category { min-height:220px; border:1px solid rgba(212,175,55,.3); background:linear-gradient(145deg,rgba(212,175,55,.08),rgba(12,12,12,.96) 55%,rgba(139,0,21,.11)); transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease; }
+.main-category:hover { transform:translateY(-4px); border-color:rgba(241,212,106,.8); box-shadow:0 18px 42px rgba(0,0,0,.3),inset 0 0 45px rgba(212,175,55,.04); }
+.filters select,.search-box input,.sort-box select { border-color:rgba(212,175,55,.32); background-color:#111; }
+.products-grid { gap:22px; }
+.product-card { border:1px solid rgba(212,175,55,.17); background:linear-gradient(180deg,#141414 0%,#0c0c0c 100%); border-radius:5px; overflow:hidden; transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease; }
+.product-card:hover { border-color:rgba(212,175,55,.62); box-shadow:0 18px 48px rgba(0,0,0,.38),0 0 25px rgba(212,175,55,.055); }
+.product-image { background:radial-gradient(ellipse at 50% 45%,rgba(212,175,55,.095),transparent 68%),#101010; }
+.product-card.premium-card { border-color:rgba(194,15,47,.62); background:linear-gradient(180deg,#1a0a0d 0%,#0b090a 100%); box-shadow:inset 0 0 0 1px rgba(194,15,47,.08); }
+.product-card.premium-card .product-image { background:radial-gradient(ellipse at 50% 45%,rgba(194,15,47,.19),transparent 68%),#10090b; }
+.product-card.premium-card .product-tag { background:linear-gradient(120deg,#65000f,#bd1730); color:#fff; border-color:rgba(255,220,220,.25); }
+.product-brand { letter-spacing:.14em; }
+.product-price { color:#ffe58a; }
+.request-button { border-radius:2px; letter-spacing:.09em; }
+.featured-section { padding:clamp(42px,6vw,84px) 0 30px; overflow:hidden; }
+.featured-heading { padding-inline:20px; }
+.featured-carousel .featured-card { min-height:clamp(400px,43vw,620px); border-top:1px solid rgba(212,175,55,.42); border-bottom:1px solid rgba(212,175,55,.42); background:radial-gradient(ellipse at 22% 45%,rgba(212,175,55,.11),transparent 40%),linear-gradient(110deg,#17140d,#080808 58%,#13090b); }
+.featured-carousel .featured-card .product-info { padding:clamp(22px,6vw,100px); }
+.featured-carousel .featured-card .product-info h3 { font-size:clamp(28px,4vw,54px); line-height:1.05; }
+.featured-carousel .featured-card .product-description { max-width:460px; line-height:1.8; }
+.featured-carousel .featured-card .request-button { min-width:190px; }
+.carousel-arrow { box-shadow:0 4px 22px rgba(0,0,0,.25); }
+.scent-finder-section { max-width:1320px; margin:clamp(48px,7vw,92px) auto; padding:clamp(24px,4vw,48px); display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:clamp(24px,4vw,56px); align-items:center; border:1px solid rgba(212,175,55,.3); background:radial-gradient(ellipse at 5% 0%,rgba(212,175,55,.11),transparent 40%),linear-gradient(120deg,#12110d,#0a0a0a 65%,#12090b); box-shadow:0 24px 65px rgba(0,0,0,.22); }
+.scent-finder-copy h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(34px,4vw,58px); color:#f5f0df; margin:10px 0; }
+.scent-finder-copy h2 span { color:var(--gold-light); }
+.scent-finder-copy p:last-child { color:#b8b4aa; line-height:1.8; max-width:440px; }
+.scent-finder-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.scent-finder-controls label { display:flex; flex-direction:column; gap:8px; color:#d7d0bd; font-size:11px; letter-spacing:.07em; }
+.scent-finder-controls label:nth-child(3) { grid-column:1; }
+.scent-finder-controls select { width:100%; min-height:46px; padding:0 12px; color:#f6f1e3; background:#0a0a0a; border:1px solid rgba(212,175,55,.35); border-radius:2px; }
+.scent-finder-controls .gold-button { align-self:end; min-height:46px; margin:0; grid-column:2; }
+#typeFilter { min-width:165px; }
+.catalog-info { margin-top:16px; }
+.product-modal-image-wrap { background:radial-gradient(ellipse at center,rgba(212,175,55,.13),transparent 65%),#0d0d0d; }
+.product-modal-info { background:linear-gradient(150deg,#141414,#090909); }
+.product-modal-request { letter-spacing:.08em; }
+.admin-product { border-color:rgba(212,175,55,.22); }
+.admin-product .product-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.admin-product .duplicate-button { background:#222018; color:#f1d46a; border:1px solid rgba(212,175,55,.35); padding:10px 14px; cursor:pointer; }
+.admin-product .duplicate-button:hover { background:#342b12; }
+@media(max-width:850px) { .scent-finder-section { grid-template-columns:1fr; } .scent-finder-controls { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:650px) { .category-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; } .main-category { min-height:150px; padding:12px 7px; } .category-content h3 { font-size:clamp(13px,3.2vw,19px); letter-spacing:.04em; } .category-content p { font-size:10px; line-height:1.45; } .category-content span { font-size:8px; letter-spacing:.08em; } .scent-finder-section { margin:40px 12px; padding:22px 16px; gap:18px; } .scent-finder-controls { grid-template-columns:1fr; } .scent-finder-controls label:nth-child(3),.scent-finder-controls .gold-button { grid-column:auto; } .featured-carousel .featured-card { grid-template-columns:1fr; min-height:0; } .featured-carousel .featured-card .product-image { min-height:270px; height:270px; padding:20px; } .featured-carousel .featured-card .product-image img { max-height:250px; } .featured-carousel .featured-card .product-info { padding:24px 20px 30px; align-items:center; text-align:center; } .featured-carousel .featured-card .product-info h3 { font-size:30px; } .featured-carousel .featured-card .product-description { display:none; } #typeFilter { min-width:0; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
