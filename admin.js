@@ -177,7 +177,7 @@ async function loadPerfumes() {
     const result = await supabaseClient
         .from("perfumes")
         .select(`
-            id, nombre, genero, precio, descripcion, imagen, stock, premium,
+            id, nombre, genero, precio, descripcion, acordes, imagen, stock, premium,
             destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
             marca_id, categoria_id,
             marcas (id, nombre),

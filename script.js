@@ -317,10 +317,14 @@ function filterProducts() {
 }
 
 function promoIsActive(perfume) {
-    if (!perfume?.promocion_activa || !(Number(perfume.descuento_porcentaje) > 0)) return false;
-    const now = new Date();
-    if (perfume.promocion_inicio && new Date(perfume.promocion_inicio + "T00:00:00") > now) return false;
-    if (perfume.promocion_fin && new Date(perfume.promocion_fin + "T23:59:59") < now) return false;
+    if (perfume?.promocion_activa !== true || !(Number(perfume.descuento_porcentaje) > 0)) return false;
+    // Comparar fechas como fechas locales (YYYY-MM-DD) evita diferencias de zona horaria.
+    const today = new Date();
+    const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const start = perfume.promocion_inicio ? String(perfume.promocion_inicio).slice(0, 10) : "";
+    const end = perfume.promocion_fin ? String(perfume.promocion_fin).slice(0, 10) : "";
+    if (start && localToday < start) return false;
+    if (end && localToday > end) return false;
     return true;
 }
 function effectivePrice(perfume) {
