@@ -339,7 +339,7 @@ function effectivePrice(perfume) {
 }
 function renderFeaturedCarousel() {
     if (!featuredCarousel) return;
-    const featured = perfumes.filter(p => p.destacado || promoIsActive(p)).slice(0, 12);
+    const featured = perfumes.filter(p => p.destacado === true).slice(0, 12);
     featuredCarousel.innerHTML = "";
     featured.forEach(p => {
         const card = createProductCard(p, true);
