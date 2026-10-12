@@ -953,54 +953,6 @@ refreshSales?.addEventListener("click", async function () {
     updateStatistics();
 });
 
-function openDeleteSaleModal(id) {
-    pendingSaleDeleteId = id;
-    if (deleteSalePassword) deleteSalePassword.value = "";
-    if (deleteSaleMessage) deleteSaleMessage.textContent = "";
-    deleteSaleModal?.classList.remove("hidden");
-    deleteSaleModal?.setAttribute("aria-hidden", "false");
-    deleteSalePassword?.focus();
-}
-
-function closeDeleteSale() {
-    pendingSaleDeleteId = null;
-    deleteSaleModal?.classList.add("hidden");
-    deleteSaleModal?.setAttribute("aria-hidden", "true");
-}
-
-closeDeleteSaleModal?.addEventListener("click", closeDeleteSale);
-deleteSaleModal?.querySelector(".admin-modal-backdrop")?.addEventListener("click", closeDeleteSale);
-
-confirmDeleteSale?.addEventListener("click", async function () {
-    if (!pendingSaleDeleteId) return;
-    const password = deleteSalePassword?.value || "";
-    if (!password) {
-        if (deleteSaleMessage) deleteSaleMessage.textContent = "Ingresá la contraseña.";
-        return;
-    }
-    confirmDeleteSale.disabled = true;
-    if (deleteSaleMessage) deleteSaleMessage.textContent = "Verificando...";
-    const result = await supabaseClient.rpc("eliminar_venta_con_password", {
-        p_venta_id: pendingSaleDeleteId,
-        p_password: password
-    });
-    confirmDeleteSale.disabled = false;
-    if (result.error) {
-        console.error(result.error);
-        if (deleteSaleMessage) deleteSaleMessage.textContent = "No se pudo eliminar. Revisá la contraseña o la configuración de Supabase.";
-        return;
-    }
-    if (result.data !== true) {
-        if (deleteSaleMessage) deleteSaleMessage.textContent = "Contraseña incorrecta.";
-        return;
-    }
-    closeDeleteSale();
-    await loadSales();
-    loadSellerStats();
-    renderSalesHistory();
-    updateStatistics();
-});
-
 document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && deleteSaleModal && !deleteSaleModal.classList.contains("hidden")) closeDeleteSale();
 });
