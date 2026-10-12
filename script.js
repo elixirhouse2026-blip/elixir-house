@@ -25,6 +25,10 @@ const genderFilter = document.getElementById("genderFilter");
 const typeFilter = document.getElementById("typeFilter");
 const categoryFilter = document.getElementById("categoryFilter");
 const brandFilter = document.getElementById("brandFilter");
+const seasonFilter = document.getElementById("seasonFilter");
+const minPriceFilter = document.getElementById("minPriceFilter");
+const maxPriceFilter = document.getElementById("maxPriceFilter");
+const applyPriceFilterButton = document.getElementById("applyPriceFilter");
 const sortFilter = document.getElementById("sortFilter");
 const productCount = document.getElementById("productCount");
 const noResults = document.getElementById("noResults");
@@ -259,6 +263,10 @@ function filterProducts() {
     const type = typeFilter?.value || "todos";
     const category = categoryFilter?.value || "todos";
     const brand = brandFilter?.value || "todos";
+    const minPriceRaw = minPriceFilter?.value.trim() ?? "";
+    const maxPriceRaw = maxPriceFilter?.value.trim() ?? "";
+    const minPrice = minPriceRaw === "" ? null : Number(minPriceRaw);
+    const maxPrice = maxPriceRaw === "" ? null : Number(maxPriceRaw);
     const subcategory = getActiveSubcategory();
     const onlyFavorites = favoritesToggle?.dataset.active === "true";
     const finderAccord = document.getElementById("finderAccord")?.value || "todos";
@@ -281,6 +289,8 @@ function filterProducts() {
             (gender === "todos" || (p.tipo_producto || "Perfume") !== "Perfume" || p.genero === gender) &&
             (category === "todos" || (p.temporadas || []).includes(category)) &&
             (brand === "todos" || p.marca === brand) &&
+            (minPrice === null || effectivePrice(p) >= minPrice) &&
+            (maxPrice === null || effectivePrice(p) <= maxPrice) &&
             (subcategory === "todos" || (p.temporadas || []).includes(subcategory)) &&
             (!onlyFavorites || isFavorite(p.id))
         );
@@ -570,7 +580,7 @@ async function openSellerModal(perfume, countSale) {
             }
 
             const requestCode = requestResult.data?.id ? String(requestResult.data.id).slice(0, 8).toUpperCase() : "registrada";
-            const trackedMessage = message + "\n\n📋 Solicitud registrada en Elixir House: " + requestCode + "\n";
+            const trackedMessage = message + "\n\n📋 Solicitud registrada en Elixir House: " + requestCode + "\n(La solicitud no significa que la compra esté confirmada.)";
             closeSellerChooser();
             window.location.href = "https://wa.me/" + String(seller.telefono).replace(/\D/g, "") + "?text=" + encodeURIComponent(trackedMessage);
         });
@@ -708,7 +718,13 @@ seasonFilter?.addEventListener("change", function () {
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
     filterProducts();
 });
-[minPriceFilter, maxPriceFilter].forEach(el => el?.addEventListener("input", filterProducts));
+[minPriceFilter, maxPriceFilter].forEach(el => {
+    el?.addEventListener("input", filterProducts);
+    el?.addEventListener("keydown", event => {
+        if (event.key === "Enter") { event.preventDefault(); filterProducts(); }
+    });
+});
+applyPriceFilterButton?.addEventListener("click", filterProducts);
 document.getElementById("clearCatalogFilters")?.addEventListener("click", function () {
     if (searchInput) searchInput.value = "";
     if (genderFilter) genderFilter.value = "todos";

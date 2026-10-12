@@ -3155,3 +3155,24 @@ body { background:#070707; }
 .clear-filters-button{padding:11px 14px;border:1px solid rgba(212,175,55,.4);border-radius:6px;background:transparent;color:#f1d46a;font-size:10px;font-weight:800;letter-spacing:.7px;cursor:pointer}
 .clear-filters-button:hover{background:rgba(212,175,55,.1)}
 @media(max-width:600px){.price-filter-row{display:grid;grid-template-columns:1fr 1fr}.price-filter-row label,.price-filter-row input{width:100%;min-width:0}.clear-filters-button{grid-column:1/-1;width:100%}}
+
+
+/* Aplicar el rango de precios del catálogo */
+.apply-price-button {
+    align-self: end;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid var(--gold, #d4af37);
+    border-radius: 8px;
+    background: var(--gold, #d4af37);
+    color: #080808;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.apply-price-button:hover { filter: brightness(1.08); }
+.price-filter-row label { min-width: 0; }
+.price-filter-row input { width: 100%; box-sizing: border-box; }
+@media (max-width: 640px) {
+    .apply-price-button, .clear-filters-button { width: 100%; }
+}
