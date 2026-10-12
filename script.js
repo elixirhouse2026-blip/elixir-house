@@ -529,16 +529,6 @@ function buildPerfumeMessage(perfume) {
     return message;
 }
 
-async function registerSellerSale(perfume, seller) {
-    if (!seller?.id || !perfume?.id) return;
-    const result = await supabaseClient.from("ventas").insert({
-        vendedor_id: seller.id,
-        perfume_id: perfume.id,
-        precio: effectivePrice(perfume)
-    });
-    if (result.error) console.error("No se pudo registrar el registro:", result.error);
-}
-
 async function openSellerModal(perfume, countSale) {
     if (!sellerModal || !sellerOptions) return;
     if (!vendedores.length) await loadVendedores();
@@ -556,10 +546,33 @@ async function openSellerModal(perfume, countSale) {
         `;
         button.addEventListener("click", async function () {
             const request = pendingWhatsAppRequest;
-            if (request?.countSale && request.perfume) await registerSellerSale(request.perfume, seller);
-            const message = request?.perfume ? buildPerfumeMessage(request.perfume) : SELLER_FALLBACK_MESSAGE;
+            const selectedPerfume = request?.perfume || null;
+            const message = selectedPerfume ? buildPerfumeMessage(selectedPerfume) : SELLER_FALLBACK_MESSAGE;
+            button.disabled = true;
+            button.querySelector(".seller-option-name").textContent = "Registrando solicitud…";
+
+            // Guardar la solicitud antes de abrir WhatsApp. No es una venta todavía.
+            const currentPrice = selectedPerfume ? effectivePrice(selectedPerfume) : null;
+            const requestResult = await supabaseClient.from("solicitudes_compra").insert({
+                vendedor_id: seller.id,
+                perfume_id: selectedPerfume?.id || null,
+                producto_nombre: selectedPerfume?.nombre || "Consulta general",
+                precio_solicitado: currentPrice,
+                estado: "pendiente"
+            }).select("id").single();
+
+            if (requestResult.error) {
+                console.error("No se pudo guardar la solicitud:", requestResult.error);
+                button.disabled = false;
+                button.querySelector(".seller-option-name").textContent = seller.nombre || "Vendedor";
+                alert("No pudimos registrar la solicitud en el sistema. No se abrirá WhatsApp para evitar que la compra quede sin registro. Probá nuevamente o avisale al administrador.");
+                return;
+            }
+
+            const requestCode = requestResult.data?.id ? String(requestResult.data.id).slice(0, 8).toUpperCase() : "registrada";
+            const trackedMessage = message + "\n\n📋 Solicitud registrada en Elixir House: " + requestCode + "\n";
             closeSellerChooser();
-            window.location.href = "https://wa.me/" + String(seller.telefono).replace(/\D/g, "") + "?text=" + encodeURIComponent(message);
+            window.location.href = "https://wa.me/" + String(seller.telefono).replace(/\D/g, "") + "?text=" + encodeURIComponent(trackedMessage);
         });
         sellerOptions.appendChild(button);
     });
@@ -689,6 +702,28 @@ genderFilter?.addEventListener("change", function () {
 });
 categoryFilter?.addEventListener("change", filterProducts);
 brandFilter?.addEventListener("change", filterProducts);
+seasonFilter?.addEventListener("change", function () {
+    if (categoryFilter) categoryFilter.value = "todos";
+    subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
+    subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
+    filterProducts();
+});
+[minPriceFilter, maxPriceFilter].forEach(el => el?.addEventListener("input", filterProducts));
+document.getElementById("clearCatalogFilters")?.addEventListener("click", function () {
+    if (searchInput) searchInput.value = "";
+    if (genderFilter) genderFilter.value = "todos";
+    if (typeFilter) typeFilter.value = "todos";
+    if (categoryFilter) categoryFilter.value = "todos";
+    if (brandFilter) brandFilter.value = "todos";
+    if (seasonFilter) seasonFilter.value = "todos";
+    if (minPriceFilter) minPriceFilter.value = "";
+    if (maxPriceFilter) maxPriceFilter.value = "";
+    if (sortFilter) sortFilter.value = "recent";
+    if (favoritesToggle) { favoritesToggle.dataset.active = "false"; favoritesToggle.classList.remove("active"); }
+    subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
+    subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
+    filterProducts();
+});
 sortFilter?.addEventListener("change", filterProducts);
 
 document.getElementById("findMyAroma")?.addEventListener("click", function () {

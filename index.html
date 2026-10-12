@@ -411,6 +411,15 @@
 
 
 
+                <!-- TEMPORADA -->
+                <select id="seasonFilter" aria-label="Filtrar por temporada">
+                    <option value="todos">Todas las temporadas</option>
+                    <option value="Verano">Verano</option>
+                    <option value="Otoño">Otoño</option>
+                    <option value="Invierno">Invierno</option>
+                    <option value="Primavera">Primavera</option>
+                </select>
+
                 <!-- MARCA -->
 
                 <select id="brandFilter">
@@ -421,6 +430,12 @@
 
                 </select>
 
+            </div>
+
+            <div class="price-filter-row" aria-label="Filtrar por precio">
+                <label>Precio desde <input type="number" id="minPriceFilter" min="0" step="1" placeholder="$ mínimo"></label>
+                <label>Precio hasta <input type="number" id="maxPriceFilter" min="0" step="1" placeholder="$ máximo"></label>
+                <button type="button" id="clearCatalogFilters" class="clear-filters-button">LIMPIAR FILTROS</button>
             </div>
 
             <div class="catalog-tools">

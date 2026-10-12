@@ -9,6 +9,7 @@ let marcas = [];
 let categorias = [];
 let vendedores = [];
 let ventas = [];
+let solicitudesCompra = [];
 let editingPerfumeId = null;
 let duplicatedImageURL = null;
 let editingBrandId = null;
@@ -77,12 +78,11 @@ const salesSellerFilter = $("salesSellerFilter");
 const clearSalesFilters = $("clearSalesFilters");
 const salesHistoryBody = $("salesHistoryBody");
 const salesHistoryMessage = $("salesHistoryMessage");
-const deleteSaleModal = $("deleteSaleModal");
-const deleteSalePassword = $("deleteSalePassword");
-const confirmDeleteSale = $("confirmDeleteSale");
-const closeDeleteSaleModal = $("closeDeleteSaleModal");
-const deleteSaleMessage = $("deleteSaleMessage");
-let pendingSaleDeleteId = null;
+const confirmedSaleForm = $("confirmedSaleForm");
+const confirmedSaleSeller = $("confirmedSaleSeller");
+const confirmedSalePerfume = $("confirmedSalePerfume");
+const confirmedSalePrice = $("confirmedSalePrice");
+const confirmedSaleMessage = $("confirmedSaleMessage");
 
 function escapeHTML(value) {
     return String(value ?? "")
@@ -172,11 +172,14 @@ async function loadData() {
         loadBrands(),
         loadCategories(),
         loadSellers(),
-        loadSales()
+        loadSales(),
+        loadPurchaseRequests()
     ]);
     updateStatistics();
+    renderLowStockAlert();
     renderManagementLists();
     populatePerfumeSelects();
+    populateConfirmedSaleForm();
     loadSellerStats();
     renderSalesHistory();
 }
@@ -201,6 +204,7 @@ async function loadPerfumes() {
     perfumes = result.data || [];
     updateStatistics();
     renderAdminProducts(perfumes);
+    renderLowStockAlert();
 }
 
 async function loadBrands() {
@@ -270,6 +274,91 @@ async function loadSales() {
     updateStatistics();
 }
 
+async function loadPurchaseRequests() {
+    const body = $("purchaseRequestsBody");
+    const message = $("purchaseRequestsMessage");
+    const result = await supabaseClient
+        .from("solicitudes_compra")
+        .select("id,vendedor_id,perfume_id,producto_nombre,precio_solicitado,estado,created_at,confirmado_at,cancelado_at,vendedores(nombre),perfumes(nombre)")
+        .order("created_at", { ascending: false });
+    if (result.error) {
+        console.error("Error cargando solicitudes:", result.error);
+        solicitudesCompra = [];
+        if (body) body.innerHTML = '<tr><td colspan="6">No se pudieron cargar las solicitudes. Verificá que hayas ejecutado el SQL de solicitudes en Supabase.</td></tr>';
+        if (message) message.textContent = "Las solicitudes deben guardarse en Supabase para que quede un registro central.";
+        return;
+    }
+    solicitudesCompra = result.data || [];
+    renderPurchaseRequests();
+}
+
+function renderPurchaseRequests() {
+    const body = $("purchaseRequestsBody");
+    const message = $("purchaseRequestsMessage");
+    if (!body) return;
+    body.innerHTML = "";
+    if (!solicitudesCompra.length) {
+        body.innerHTML = '<tr><td colspan="6">Todavía no hay solicitudes registradas.</td></tr>';
+    } else {
+        solicitudesCompra.forEach(req => {
+            const tr = document.createElement("tr");
+            const status = req.estado || "pendiente";
+            const statusLabel = status === "confirmada" ? "CONFIRMADA" : status === "cancelada" ? "CANCELADA" : "PENDIENTE";
+            const actions = status === "pendiente"
+                ? `<button type="button" class="secondary-button request-confirm-button" data-id="${escapeHTML(req.id)}">CONFIRMAR COMPRA</button> <button type="button" class="secondary-button request-cancel-button" data-id="${escapeHTML(req.id)}">CANCELAR</button>`
+                : `<span class="request-status request-status-${status}">${statusLabel}</span>`;
+            tr.innerHTML = `<td><code>${escapeHTML(String(req.id).slice(0, 8).toUpperCase())}</code></td><td>${escapeHTML(formatDate(req.created_at))}</td><td>${escapeHTML(req.vendedores?.nombre || "Vendedor no disponible")}</td><td>${escapeHTML(req.producto_nombre || req.perfumes?.nombre || "Consulta general")}</td><td>${req.precio_solicitado == null ? "—" : formatPrice(req.precio_solicitado)}</td><td>${actions}</td>`;
+            body.appendChild(tr);
+        });
+    }
+    if (message) {
+        const pending = solicitudesCompra.filter(r => r.estado === "pendiente").length;
+        message.textContent = `${solicitudesCompra.length} solicitudes registradas · ${pending} pendiente${pending === 1 ? "" : "s"}. Las solicitudes no suman puntos hasta confirmarse.`;
+    }
+    body.querySelectorAll(".request-confirm-button").forEach(button => button.addEventListener("click", () => confirmPurchaseRequest(button.dataset.id)));
+    body.querySelectorAll(".request-cancel-button").forEach(button => button.addEventListener("click", () => cancelPurchaseRequest(button.dataset.id)));
+}
+
+async function confirmPurchaseRequest(requestId) {
+    const req = solicitudesCompra.find(r => String(r.id) === String(requestId));
+    if (!req || req.estado !== "pendiente") return;
+    const entered = prompt(`Confirmar compra de ${req.producto_nombre || "este producto"}. Precio final de venta:`, String(req.precio_solicitado ?? ""));
+    if (entered === null) return;
+    const price = Number(entered);
+    if (!Number.isFinite(price) || price < 0) { alert("Ingresá un precio válido."); return; }
+    const result = await supabaseClient.rpc("confirmar_solicitud_compra", { p_solicitud_id: requestId, p_precio: price });
+    if (result.error) {
+        console.error("No se pudo confirmar la solicitud:", result.error);
+        alert("No se pudo confirmar. Revisá que hayas ejecutado el SQL de solicitudes y la función de confirmación en Supabase.");
+        return;
+    }
+    await Promise.all([loadPurchaseRequests(), loadSales()]);
+    updateStatistics();
+    await loadSellerStats();
+    renderSalesHistory();
+    alert("Compra confirmada. Ya cuenta en el historial de ventas y los puntos del vendedor.");
+}
+
+async function cancelPurchaseRequest(requestId) {
+    const req = solicitudesCompra.find(r => String(r.id) === String(requestId));
+    if (!req || req.estado !== "pendiente") return;
+    if (!confirm("¿Marcar esta solicitud como cancelada? Quedará registrada en el historial de solicitudes.")) return;
+    const sessionResult = await supabaseClient.auth.getSession();
+    const result = await supabaseClient.from("solicitudes_compra").update({
+        estado: "cancelada",
+        cancelado_at: new Date().toISOString(),
+        cancelado_por: sessionResult.data?.session?.user?.id || null
+    }).eq("id", requestId).eq("estado", "pendiente");
+    if (result.error) {
+        console.error("No se pudo cancelar la solicitud:", result.error);
+        alert("No se pudo cancelar la solicitud. Revisá los permisos de Supabase.");
+        return;
+    }
+    await loadPurchaseRequests();
+}
+
+$("refreshPurchaseRequests")?.addEventListener("click", loadPurchaseRequests);
+
 function updateStatistics() {
     if (totalPerfumes) totalPerfumes.textContent = perfumes.length;
     if (totalStock) totalStock.textContent = perfumes.filter(p => p.stock).length;
@@ -311,6 +400,81 @@ function populatePerfumeSelects() {
         if (current) perfumeCategory.value = current;
     }
 }
+
+function populateConfirmedSaleForm() {
+    if (confirmedSaleSeller) {
+        const current = confirmedSaleSeller.value;
+        confirmedSaleSeller.innerHTML = '<option value="">Seleccionar vendedor</option>';
+        vendedores.filter(s => s.activo !== false).forEach(seller => {
+            const option = document.createElement("option");
+            option.value = seller.id;
+            option.textContent = seller.nombre || "Vendedor";
+            confirmedSaleSeller.appendChild(option);
+        });
+        if (current) confirmedSaleSeller.value = current;
+    }
+    if (confirmedSalePerfume) {
+        const current = confirmedSalePerfume.value;
+        confirmedSalePerfume.innerHTML = '<option value="">Seleccionar producto</option>';
+        perfumes.forEach(perfume => {
+            const option = document.createElement("option");
+            option.value = perfume.id;
+            option.dataset.price = String(Number(perfume.precio) || 0);
+            option.dataset.discount = String(Number(perfume.descuento_porcentaje) || 0);
+            option.dataset.promo = String(perfume.promocion_activa === true);
+            option.textContent = `${perfume.nombre || "Producto"} — ${formatPrice(perfume.precio)}`;
+            confirmedSalePerfume.appendChild(option);
+        });
+        if (current) confirmedSalePerfume.value = current;
+    }
+    updateConfirmedSalePrice();
+}
+
+function updateConfirmedSalePrice() {
+    if (!confirmedSalePerfume || !confirmedSalePrice) return;
+    const option = confirmedSalePerfume.selectedOptions?.[0];
+    if (!option || !option.value) return;
+    let price = Number(option.dataset.price) || 0;
+    if (option.dataset.promo === "true") {
+        const discount = Math.min(100, Math.max(0, Number(option.dataset.discount) || 0));
+        price = Math.round(price * (1 - discount / 100));
+    }
+    confirmedSalePrice.value = String(price);
+}
+
+confirmedSalePerfume?.addEventListener("change", updateConfirmedSalePrice);
+confirmedSaleForm?.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!confirmedSaleSeller?.value || !confirmedSalePerfume?.value) {
+        if (confirmedSaleMessage) confirmedSaleMessage.textContent = "Elegí el vendedor y el producto.";
+        return;
+    }
+    const price = Number(confirmedSalePrice?.value);
+    if (!Number.isFinite(price) || price < 0) {
+        if (confirmedSaleMessage) confirmedSaleMessage.textContent = "Ingresá un precio válido.";
+        return;
+    }
+    const button = confirmedSaleForm.querySelector('button[type="submit"]');
+    if (button) { button.disabled = true; button.textContent = "REGISTRANDO…"; }
+    if (confirmedSaleMessage) confirmedSaleMessage.textContent = "Guardando venta confirmada…";
+    const result = await supabaseClient.from("ventas").insert({
+        vendedor_id: confirmedSaleSeller.value,
+        perfume_id: confirmedSalePerfume.value,
+        precio: price
+    });
+    if (button) { button.disabled = false; button.textContent = "CONFIRMAR Y REGISTRAR VENTA"; }
+    if (result.error) {
+        console.error("No se pudo registrar la venta confirmada:", result.error);
+        if (confirmedSaleMessage) confirmedSaleMessage.textContent = "No se pudo registrar. Revisá la conexión y las políticas de Supabase.";
+        return;
+    }
+    if (confirmedSaleMessage) confirmedSaleMessage.textContent = "¡Venta confirmada! Ya se actualizarán el historial y los puntos de venta.";
+    confirmedSaleForm.reset();
+    await loadSales();
+    updateStatistics();
+    await loadSellerStats();
+    renderSalesHistory();
+});
 
 function renderManagementLists() {
     renderBrands();
@@ -672,6 +836,8 @@ perfumeForm?.addEventListener("submit", async function (event) {
     const data = { nombre, tipo_producto, marca_id: marcaId, genero, categoria_id: categoriaId, temporadas, precio, descripcion, acordes, imagen, stock, premium, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin };
 
     let result;
+    let oldProduct = null;
+    if (editingPerfumeId) oldProduct = perfumes.find(p => String(p.id) === String(editingPerfumeId)) || null;
     if (editingPerfumeId) {
         result = await supabaseClient.from("perfumes").update(data).eq("id", editingPerfumeId);
     } else {
@@ -685,6 +851,16 @@ perfumeForm?.addEventListener("submit", async function (event) {
         return;
     }
 
+    if (editingPerfumeId && oldProduct) {
+        const changes = [];
+        if (Number(oldProduct.precio) !== Number(precio)) changes.push(`Precio: ${formatPrice(oldProduct.precio)} → ${formatPrice(precio)}`);
+        if (oldProduct.stock !== stock) changes.push(`Stock: ${oldProduct.stock ? "Con stock" : "Sin stock"} → ${stock ? "Con stock" : "Sin stock"}`);
+        if (changes.length) {
+            const history = JSON.parse(localStorage.getItem("elixirProductChangeHistory") || "[]");
+            history.unshift({ fecha: new Date().toISOString(), producto: nombre, producto_id: editingPerfumeId, cambios: changes.join(" | ") });
+            localStorage.setItem("elixirProductChangeHistory", JSON.stringify(history.slice(0, 300)));
+        }
+    }
     formMessage.textContent = editingPerfumeId ? "Producto actualizado correctamente." : "Producto agregado correctamente.";
     duplicatedImageURL = null;
     formMessage.style.color = "#65c77a";
@@ -805,6 +981,8 @@ async function deletePerfume(id) {
     await loadSales();
     updateStatistics();
     renderSalesHistory();
+    renderLowStockAlert();
+    renderChangeHistory();
 }
 
 function clearImagePreview() {
@@ -874,6 +1052,7 @@ function formatSellerPhone(phone) {
 refreshSellerStats?.addEventListener("click", async function () {
     await loadSellers();
     await loadSales();
+    populateConfirmedSaleForm();
     loadSellerStats();
     renderSalesHistory();
     updateStatistics();
@@ -912,7 +1091,7 @@ function renderSalesHistory() {
     salesHistoryBody.innerHTML = "";
 
     if (!filtered.length) {
-        salesHistoryBody.innerHTML = '<tr><td colspan="5" class="history-empty">No hay registros para estos filtros.</td></tr>';
+        salesHistoryBody.innerHTML = '<tr><td colspan="4" class="history-empty">No hay registros para estos filtros.</td></tr>';
     } else {
         filtered.forEach(function (sale) {
             const tr = document.createElement("tr");
@@ -922,12 +1101,8 @@ function renderSalesHistory() {
                 <td>${escapeHTML(sale.vendedores?.nombre || "—")}</td>
                 <td>${escapeHTML(sale.perfumes?.nombre || "Perfume eliminado")}</td>
                 <td>${formatPrice(price)}</td>
-                <td><button type="button" class="delete-sale-button" data-sale-id="${escapeHTML(sale.id)}">ELIMINAR</button></td>
             `;
             salesHistoryBody.appendChild(tr);
-        });
-        salesHistoryBody.querySelectorAll(".delete-sale-button").forEach(btn => {
-            btn.addEventListener("click", () => openDeleteSaleModal(btn.dataset.saleId));
         });
     }
 
@@ -948,13 +1123,10 @@ clearSalesFilters?.addEventListener("click", function () {
 refreshSales?.addEventListener("click", async function () {
     await loadSellers();
     await loadSales();
+    populateConfirmedSaleForm();
     loadSellerStats();
     renderSalesHistory();
     updateStatistics();
-});
-
-document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && deleteSaleModal && !deleteSaleModal.classList.contains("hidden")) closeDeleteSale();
 });
 
 function cancelManagementEdits() {
@@ -962,8 +1134,57 @@ function cancelManagementEdits() {
     cancelCategoryEdit();
 }
 
+function csvEscape(value) {
+    const text = String(value ?? "");
+    return '"' + text.replace(/"/g, '""') + '"';
+}
+
+function downloadCSV(filename, rows) {
+    if (!rows.length) { alert("No hay datos para exportar."); return; }
+    const csv = "\uFEFF" + rows.map(row => row.map(csvEscape).join(";")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function exportCatalogCSV() {
+    const rows = [["ID", "Producto", "Tipo", "Marca", "Género", "Temporadas", "Acordes", "Precio lista", "Descuento %", "Precio actual", "Stock", "Premium", "Destacado"]];
+    perfumes.forEach(p => rows.push([p.id, p.nombre, p.tipo_producto, p.marcas?.nombre || "", p.genero || "", (p.temporadas || []).join(", "), (p.acordes || []).join(", "), p.precio, p.promocion_activa ? p.descuento_porcentaje : 0, Number(p.precio) * (p.promocion_activa ? (1 - Number(p.descuento_porcentaje || 0) / 100) : 1), p.stock ? "Con stock" : "Sin stock", p.premium ? "Sí" : "No", p.destacado ? "Sí" : "No"]));
+    downloadCSV("elixir-house-catalogo.csv", rows);
+}
+
+function exportSalesCSV() {
+    const rows = [["Fecha", "Vendedor", "Producto", "Precio"]];
+    ventas.forEach(s => rows.push([formatDate(s.created_at), s.vendedores?.nombre || "", s.perfumes?.nombre || "Producto eliminado", s.precio ?? s.perfumes?.precio ?? 0]));
+    downloadCSV("elixir-house-ventas.csv", rows);
+}
+
+function renderLowStockAlert() {
+    const panel = $("lowStockAlert");
+    if (!panel) return;
+    const out = perfumes.filter(p => p.stock === false);
+    panel.innerHTML = out.length
+        ? `<strong>Atención: ${out.length} producto${out.length === 1 ? "" : "s"} sin stock</strong><ul>${out.slice(0, 8).map(p => `<li>${escapeHTML(p.nombre)}${p.marcas?.nombre ? ` · ${escapeHTML(p.marcas.nombre)}` : ""}</li>`).join("")}</ul>${out.length > 8 ? `<small>Y ${out.length - 8} más.</small>` : ""}`
+        : "Todos los productos figuran con stock.";
+    panel.classList.toggle("has-alerts", out.length > 0);
+}
+
+function renderChangeHistory() {
+    const body = $("changeHistoryBody");
+    if (!body) return;
+    const history = JSON.parse(localStorage.getItem("elixirProductChangeHistory") || "[]");
+    body.innerHTML = history.length ? history.slice(0, 30).map(item => `<tr><td>${escapeHTML(formatDate(item.fecha))}</td><td>${escapeHTML(item.producto)}</td><td>${escapeHTML(item.cambios)}</td></tr>`).join("") : '<tr><td colspan="3">Todavía no hay cambios de precio o stock registrados en este navegador.</td></tr>';
+}
+
+document.getElementById("exportCatalogCSV")?.addEventListener("click", exportCatalogCSV);
+document.getElementById("exportSalesCSV")?.addEventListener("click", exportSalesCSV);
+document.getElementById("refreshChangeHistory")?.addEventListener("click", renderChangeHistory);
+
 async function init() {
     updateFavoritesUIIfNeeded();
+    renderChangeHistory();
     await checkSession();
 }
 

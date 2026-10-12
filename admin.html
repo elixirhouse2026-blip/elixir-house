@@ -610,6 +610,49 @@
             </section>
 
 
+
+            <section class="admin-tools-panel">
+                <div class="section-title"><div><span class="seller-section-label">CONTROL DEL CATÁLOGO</span><h2>ALERTAS Y EXPORTACIÓN</h2></div></div>
+                <div id="lowStockAlert" class="low-stock-alert">Revisando disponibilidad…</div>
+                <div class="export-actions">
+                    <button type="button" id="exportCatalogCSV" class="secondary-button">EXPORTAR CATÁLOGO CSV</button>
+                    <button type="button" id="exportSalesCSV" class="secondary-button">EXPORTAR VENTAS CSV</button>
+                </div>
+                <p class="management-help">La alerta detecta productos marcados como “sin stock”. Para alertas por cantidad mínima real, el catálogo necesitaría un campo numérico de unidades.</p>
+            </section>
+
+            <section class="admin-tools-panel">
+                <div class="section-title"><div><span class="seller-section-label">AUDITORÍA LOCAL</span><h2>HISTORIAL DE CAMBIOS</h2></div><button type="button" id="refreshChangeHistory" class="secondary-button">ACTUALIZAR</button></div>
+                <p class="management-help">Se registran los cambios de precio y disponibilidad realizados desde este navegador. Este historial local no sustituye un registro central en Supabase.</p>
+                <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Fecha</th><th>Producto</th><th>Cambios</th></tr></thead><tbody id="changeHistoryBody"><tr><td colspan="3">Cargando…</td></tr></tbody></table></div>
+            </section>
+
+            <section class="admin-tools-panel" id="registerSalePanel">
+                <div class="section-title"><div><span class="seller-section-label">VENTA REALIZADA</span><h2>CONFIRMAR COMPRA</h2></div></div>
+                <p class="management-help">Usá este formulario solamente cuando el cliente confirmó la compra y la operación se concretó. Tocar “Solicitar por WhatsApp” en el catálogo ya no genera una venta.</p>
+                <form id="confirmedSaleForm" class="confirmed-sale-form">
+                    <label>Vendedor<select id="confirmedSaleSeller" required><option value="">Seleccionar vendedor</option></select></label>
+                    <label>Perfume o producto<select id="confirmedSalePerfume" required><option value="">Seleccionar producto</option></select></label>
+                    <label>Precio final ($)<input id="confirmedSalePrice" type="number" min="0" step="1" required placeholder="Ej. 45000"></label>
+                    <button type="submit" class="primary-button">CONFIRMAR Y REGISTRAR VENTA</button>
+                </form>
+                <p id="confirmedSaleMessage" class="management-help" role="status"></p>
+            </section>
+
+            <section class="admin-tools-panel" id="purchaseRequestsPanel">
+                <div class="section-title"><div><span class="seller-section-label">CONTROL DE SOLICITUDES</span><h2>SOLICITUDES DE COMPRA</h2></div><button type="button" id="refreshPurchaseRequests" class="secondary-button">ACTUALIZAR</button></div>
+                <p class="management-help">Cada solicitud queda guardada al tocar el botón de WhatsApp. Las solicitudes pendientes no suman ventas ni puntos. Confirmá solo cuando la compra se concrete; las cancelaciones quedan registradas.</p>
+                <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Código</th><th>Fecha de solicitud</th><th>Vendedor asignado</th><th>Producto</th><th>Precio solicitado</th><th>Estado / acciones</th></tr></thead><tbody id="purchaseRequestsBody"><tr><td colspan="6">Cargando solicitudes…</td></tr></tbody></table></div>
+                <p id="purchaseRequestsMessage" class="management-help" role="status"></p>
+            </section>
+
+            <section class="admin-tools-panel" id="salesHistoryPanel">
+                <div class="section-title"><div><span class="seller-section-label">REGISTROS</span><h2>HISTORIAL DE VENTAS</h2></div><button type="button" id="refreshSales" class="secondary-button">ACTUALIZAR VENTAS</button></div>
+                <div class="history-filters"><label>Desde<input type="date" id="salesDateFrom"></label><label>Hasta<input type="date" id="salesDateTo"></label><label>Vendedor<select id="salesSellerFilter"><option value="todos">Todos los vendedores</option></select></label><button type="button" id="clearSalesFilters" class="secondary-button">LIMPIAR</button></div>
+                <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Fecha</th><th>Vendedor</th><th>Producto</th><th>Precio</th></tr></thead><tbody id="salesHistoryBody"><tr><td colspan="4">Cargando ventas…</td></tr></tbody></table></div>
+                <p id="salesHistoryMessage" class="management-help"></p>
+            </section>
+
             <div class="admin-footer-note">Elixir House · Panel privado · Los cambios del catálogo se guardan en Supabase.</div>
         </main>
 

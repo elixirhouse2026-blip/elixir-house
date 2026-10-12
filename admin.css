@@ -1107,3 +1107,19 @@ body {
   .product-actions { gap:7px; }
   .product-actions button { padding:8px 9px; font-size:12px; }
 }
+
+
+.admin-tools-panel{margin:26px 0;padding:22px;border:1px solid rgba(212,175,55,.22);border-radius:10px;background:rgba(255,255,255,.018);min-width:0}.admin-tools-panel .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.export-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.low-stock-alert{padding:13px 15px;border:1px solid rgba(101,199,122,.25);border-radius:7px;background:rgba(101,199,122,.06);color:#bce8c5;font-size:13px}.low-stock-alert.has-alerts{border-color:rgba(255,111,126,.45);background:rgba(139,0,21,.16);color:#ffb0b8}.low-stock-alert ul{margin:9px 0 0;padding-left:20px;line-height:1.8}.history-table-wrap{width:100%;overflow-x:auto;margin-top:12px}.history-table{width:100%;border-collapse:collapse;min-width:520px}.history-table th,.history-table td{padding:11px 10px;border-bottom:1px solid rgba(212,175,55,.12);text-align:left;font-size:12px;color:#ddd}.history-table th{color:#f1d46a;text-transform:uppercase;letter-spacing:.6px;font-size:10px}.history-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.history-filters label{display:flex;flex-direction:column;gap:6px;color:#d4af37;font-size:11px}.history-filters input,.history-filters select{padding:10px;background:#0b0b0b;color:#fff;border:1px solid rgba(212,175,55,.25);border-radius:5px}.admin-tools-panel .management-help{line-height:1.6}@media(max-width:600px){.admin-tools-panel{padding:14px;margin:18px 0}.admin-tools-panel .section-title{align-items:flex-start}.export-actions>*{width:100%}.history-filters>*{width:100%}.history-filters label input,.history-filters label select{width:100%}}
+
+.confirmed-sale-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;margin-top:14px}.confirmed-sale-form label{display:flex;flex-direction:column;gap:7px;color:#d4af37;font-size:11px}.confirmed-sale-form input,.confirmed-sale-form select{width:100%;min-width:0;padding:11px;background:#0b0b0b;color:#fff;border:1px solid rgba(212,175,55,.3);border-radius:5px}.confirmed-sale-form button{grid-column:1/-1;min-height:42px}@media(max-width:700px){.confirmed-sale-form{grid-template-columns:1fr}.confirmed-sale-form button{grid-column:auto}}
+
+/* Registro central de solicitudes de compra */
+.request-confirm-button { border-color: #d4af37; color: #17120a; background: #d4af37; margin: 2px 3px 2px 0; }
+.request-cancel-button { margin: 2px 3px 2px 0; }
+.request-status { display: inline-block; padding: 6px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+.request-status-confirmada { color: #b8f3cc; background: rgba(31, 145, 76, .18); }
+.request-status-cancelada { color: #ffc0c6; background: rgba(190, 40, 55, .18); }
+@media (max-width: 720px) {
+  #purchaseRequestsPanel .history-table { min-width: 760px; }
+  #purchaseRequestsPanel .section-title { align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+}
