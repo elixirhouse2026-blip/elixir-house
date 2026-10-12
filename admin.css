@@ -1074,3 +1074,11 @@ body {
 .accord-inputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .accord-inputs input { min-width: 0; }
 @media (max-width: 640px) { .accord-inputs { grid-template-columns: 1fr; } }
+
+
+/* Evita que los precios promocionales se salgan de la tarjeta */
+.admin-product-price { display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; min-width:0; max-width:100%; overflow-wrap:anywhere; font-size:clamp(13px, 1.2vw, 20px); line-height:1.35; }
+.admin-product-price del { font-size:.82em; color:#bdbdbd; }
+.admin-product-price .admin-promo-badge { font-size:11px; white-space:nowrap; }
+.admin-product-card, .admin-product-info { min-width:0; }
+@media (max-width:600px) { .admin-product-price { font-size:14px; gap:5px; } .admin-product-price .admin-promo-badge { font-size:10px; } }

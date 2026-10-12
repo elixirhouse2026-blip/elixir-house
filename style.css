@@ -3130,3 +3130,19 @@ body { background:#070707; }
 @media(max-width:850px) { .scent-finder-section { grid-template-columns:1fr; } .scent-finder-controls { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:650px) { .category-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; } .main-category { min-height:150px; padding:12px 7px; } .category-content h3 { font-size:clamp(13px,3.2vw,19px); letter-spacing:.04em; } .category-content p { font-size:10px; line-height:1.45; } .category-content span { font-size:8px; letter-spacing:.08em; } .scent-finder-section { margin:40px 12px; padding:22px 16px; gap:18px; } .scent-finder-controls { grid-template-columns:1fr; } .scent-finder-controls label:nth-child(3),.scent-finder-controls .gold-button { grid-column:auto; } .featured-carousel .featured-card { grid-template-columns:1fr; min-height:0; } .featured-carousel .featured-card .product-image { min-height:270px; height:270px; padding:20px; } .featured-carousel .featured-card .product-image img { max-height:250px; } .featured-carousel .featured-card .product-info { padding:24px 20px 30px; align-items:center; text-align:center; } .featured-carousel .featured-card .product-info h3 { font-size:30px; } .featured-carousel .featured-card .product-description { display:none; } #typeFilter { min-width:0; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
+
+
+/* Ajustes solicitados: categorías alineadas y paginación del catálogo */
+@media (max-width: 650px) {
+  .category-grid { align-items: stretch; }
+  .main-category { align-items: flex-start !important; justify-content: flex-start; min-height: 150px; padding: 12px 7px; }
+  .main-category .category-content { width: 100%; margin-top: 0; }
+  .main-category .category-content span { display:block; margin-bottom: 8px; }
+  .main-category .category-content h3 { margin: 0 0 8px; line-height: 1.15; min-height: 2.3em; }
+  .main-category .category-content p { margin-top: 0; }
+}
+.catalog-pagination { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; margin:28px auto 12px; padding:8px 12px; }
+.catalog-pagination button { min-width:42px; min-height:40px; padding:8px 13px; border:1px solid rgba(212,175,55,.55); border-radius:6px; background:#111; color:#f1d46a; cursor:pointer; }
+.catalog-pagination button:disabled { opacity:.35; cursor:not-allowed; }
+.catalog-pagination button.active { background:#d4af37; color:#080808; font-weight:700; }
+.catalog-pagination .page-label { color:#c2c2c2; font-size:13px; }

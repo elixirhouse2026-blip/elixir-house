@@ -249,7 +249,11 @@ function applySort(items) {
     return list;
 }
 
+let catalogCurrentPage = 1;
+const CATALOG_PAGE_SIZE = 12;
+
 function filterProducts() {
+    catalogCurrentPage = 1;
     const search = searchInput?.value.toLowerCase().trim() || "";
     const gender = genderFilter?.value || "todos";
     const type = typeFilter?.value || "todos";
@@ -450,13 +454,42 @@ function renderProducts(products) {
     if (!productsGrid || !premiumGrid) return;
     productsGrid.innerHTML = "";
     premiumGrid.innerHTML = "";
-
-    products.filter(p => !p.premium).forEach(p => productsGrid.appendChild(createProductCard(p)));
-    products.filter(p => p.premium).forEach(p => premiumGrid.appendChild(createProductCard(p)));
+    const totalPages = Math.max(1, Math.ceil(products.length / CATALOG_PAGE_SIZE));
+    catalogCurrentPage = Math.min(catalogCurrentPage, totalPages);
+    const start = (catalogCurrentPage - 1) * CATALOG_PAGE_SIZE;
+    const pageProducts = products.slice(start, start + CATALOG_PAGE_SIZE);
+    pageProducts.filter(p => !p.premium).forEach(p => productsGrid.appendChild(createProductCard(p)));
+    pageProducts.filter(p => p.premium).forEach(p => premiumGrid.appendChild(createProductCard(p)));
     renderFeaturedCarousel();
-
-    if (productCount) productCount.textContent = products.length === 1 ? "1 producto" : `${products.length} productos`;
+    renderCatalogPagination(products.length, totalPages);
+    if (productCount) productCount.textContent = products.length ? `${start + 1}–${Math.min(start + CATALOG_PAGE_SIZE, products.length)} de ${products.length} productos` : "0 productos";
     if (noResults) noResults.style.display = products.length ? "none" : "block";
+}
+
+function renderCatalogPagination(totalItems, totalPages) {
+    const nav = document.getElementById("catalogPagination");
+    if (!nav) return;
+    nav.innerHTML = "";
+    if (totalItems <= CATALOG_PAGE_SIZE) return;
+    const previous = document.createElement("button");
+    previous.type = "button"; previous.textContent = "‹ Anterior"; previous.disabled = catalogCurrentPage === 1;
+    previous.addEventListener("click", () => changeCatalogPage(catalogCurrentPage - 1)); nav.appendChild(previous);
+    for (let page = 1; page <= totalPages; page++) {
+        const button = document.createElement("button"); button.type = "button"; button.textContent = String(page);
+        button.classList.toggle("active", page === catalogCurrentPage); button.setAttribute("aria-label", `Página ${page}`);
+        button.addEventListener("click", () => changeCatalogPage(page)); nav.appendChild(button);
+    }
+    const next = document.createElement("button");
+    next.type = "button"; next.textContent = "Siguiente ›"; next.disabled = catalogCurrentPage === totalPages;
+    next.addEventListener("click", () => changeCatalogPage(catalogCurrentPage + 1)); nav.appendChild(next);
+    const label = document.createElement("span"); label.className = "page-label"; label.textContent = `Página ${catalogCurrentPage} de ${totalPages}`; nav.appendChild(label);
+}
+
+function changeCatalogPage(page) {
+    const totalPages = Math.max(1, Math.ceil(filteredPerfumes.length / CATALOG_PAGE_SIZE));
+    catalogCurrentPage = Math.max(1, Math.min(page, totalPages));
+    renderProducts(filteredPerfumes);
+    document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function loadVendedores() {
