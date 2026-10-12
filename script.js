@@ -454,15 +454,27 @@ function renderProducts(products) {
     if (!productsGrid || !premiumGrid) return;
     productsGrid.innerHTML = "";
     premiumGrid.innerHTML = "";
-    const totalPages = Math.max(1, Math.ceil(products.length / CATALOG_PAGE_SIZE));
+    // Los perfumes comunes se paginan de a 12; los Premium aparecen siempre
+    // en su sección independiente, en todas las páginas del catálogo.
+    const commonProducts = products.filter(p => !p.premium);
+    const premiumProducts = products.filter(p => !!p.premium);
+    const totalPages = Math.max(1, Math.ceil(commonProducts.length / CATALOG_PAGE_SIZE));
     catalogCurrentPage = Math.min(catalogCurrentPage, totalPages);
     const start = (catalogCurrentPage - 1) * CATALOG_PAGE_SIZE;
-    const pageProducts = products.slice(start, start + CATALOG_PAGE_SIZE);
-    pageProducts.filter(p => !p.premium).forEach(p => productsGrid.appendChild(createProductCard(p)));
-    pageProducts.filter(p => p.premium).forEach(p => premiumGrid.appendChild(createProductCard(p)));
+    const pageProducts = commonProducts.slice(start, start + CATALOG_PAGE_SIZE);
+
+    pageProducts.forEach(p => productsGrid.appendChild(createProductCard(p)));
+    premiumProducts.forEach(p => premiumGrid.appendChild(createProductCard(p)));
     renderFeaturedCarousel();
-    renderCatalogPagination(products.length, totalPages);
-    if (productCount) productCount.textContent = products.length ? `${start + 1}–${Math.min(start + CATALOG_PAGE_SIZE, products.length)} de ${products.length} productos` : "0 productos";
+    renderCatalogPagination(commonProducts.length, totalPages);
+    if (productCount) {
+        const shown = commonProducts.length
+            ? `${start + 1}–${Math.min(start + CATALOG_PAGE_SIZE, commonProducts.length)} de ${commonProducts.length} productos`
+            : "0 productos comunes";
+        productCount.textContent = premiumProducts.length
+            ? `${shown} · ${premiumProducts.length} Premium`
+            : shown;
+    }
     if (noResults) noResults.style.display = products.length ? "none" : "block";
 }
 

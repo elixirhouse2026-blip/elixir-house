@@ -1082,3 +1082,28 @@ body {
 .admin-product-price .admin-promo-badge { font-size:11px; white-space:nowrap; }
 .admin-product-card, .admin-product-info { min-width:0; }
 @media (max-width:600px) { .admin-product-price { font-size:14px; gap:5px; } .admin-product-price .admin-promo-badge { font-size:10px; } }
+
+/* Botones de acción del administrador: sin duplicar y eliminar siempre accesible */
+.product-actions {
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:8px;
+  min-width:0;
+}
+.product-actions button {
+  flex:0 1 auto;
+  min-width:0;
+  white-space:nowrap;
+  padding:9px 12px;
+}
+.product-actions .delete-button {
+  margin-left:0;
+  position:relative;
+  z-index:1;
+}
+@media (max-width:600px) {
+  .product-actions { gap:7px; }
+  .product-actions button { padding:8px 9px; font-size:12px; }
+}

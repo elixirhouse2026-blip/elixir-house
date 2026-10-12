@@ -738,7 +738,6 @@ function renderAdminProducts(products) {
                 </div>
                 <div class="product-actions">
                     <button type="button" class="edit-button" data-id="${perfume.id}">EDITAR</button>
-                    <button type="button" class="duplicate-button" data-id="${perfume.id}">DUPLICAR</button>
                     <button type="button" class="delete-button" data-id="${perfume.id}">ELIMINAR</button>
                 </div>
             </div>
@@ -748,22 +747,7 @@ function renderAdminProducts(products) {
     });
 
     adminProducts.querySelectorAll(".edit-button").forEach(btn => btn.addEventListener("click", () => editPerfume(btn.dataset.id)));
-    adminProducts.querySelectorAll(".duplicate-button").forEach(btn => btn.addEventListener("click", () => duplicatePerfume(btn.dataset.id)));
     adminProducts.querySelectorAll(".delete-button").forEach(btn => btn.addEventListener("click", () => deletePerfume(btn.dataset.id)));
-}
-
-function duplicatePerfume(id) {
-    const perfume = perfumes.find(p => String(p.id) === String(id));
-    if (!perfume) return;
-    editPerfume(id);
-    duplicatedImageURL = perfume.imagen || null;
-    editingPerfumeId = null;
-    const title = document.querySelector("#perfumeFormSection .section-title h2");
-    if (title) title.textContent = "DUPLICAR PRODUCTO";
-    const name = $("perfumeName");
-    if (name) name.value = `${perfume.nombre} - copia`;
-    if (formMessage) formMessage.textContent = "Se creará un producto nuevo. Revisá el nombre, precio y stock antes de guardar.";
-    perfumeFormSection?.scrollIntoView({ behavior: "smooth" });
 }
 
 function editPerfume(id) {
