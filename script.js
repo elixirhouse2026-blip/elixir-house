@@ -153,7 +153,8 @@ async function loadPerfumes() {
         });
 
         buildDynamicFilters();
-        renderSubcategories();
+        // La fila de subcategorías visuales se quitó del HTML; no debe bloquear la carga del catálogo.
+        if (typeof renderSubcategories === "function") renderSubcategories();
         filterProducts();
         renderFeaturedCarousel();
     } catch (error) {
