@@ -742,22 +742,6 @@ document.getElementById("clearCatalogFilters")?.addEventListener("click", functi
 });
 sortFilter?.addEventListener("change", filterProducts);
 
-document.getElementById("findMyAroma")?.addEventListener("click", function () {
-    const finderGender = document.getElementById("finderGender")?.value || "todos";
-    const finderAccord = document.getElementById("finderAccord")?.value || "todos";
-    const finderSeason = document.getElementById("finderSeason")?.value || "todos";
-    if (genderFilter) genderFilter.value = finderGender;
-    if (typeFilter) typeFilter.value = "Perfume";
-    if (categoryFilter) categoryFilter.value = finderSeason;
-    if (searchInput) searchInput.value = "";
-    favoritesToggle?.setAttribute("data-active", "false");
-    favoritesToggle?.classList.remove("active");
-    subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
-    subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
-    filterProducts();
-    document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" });
-});
-
 favoritesToggle?.addEventListener("click", function () {
     const active = favoritesToggle.dataset.active === "true";
     favoritesToggle.dataset.active = String(!active);
