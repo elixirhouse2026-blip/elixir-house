@@ -55,6 +55,33 @@ const featuredCarousel = document.getElementById("featuredCarousel");
 const featuredDots = document.getElementById("featuredDots");
 let featuredIndex = 0;
 
+
+// Recomendador de regalos: usa solamente productos que ya están en el catálogo.
+function findGiftIdeas() {
+    const choice = document.getElementById("giftOccasion")?.value || "todos";
+    const target = document.getElementById("giftResults");
+    if (!target) return;
+    const words = { romantico: ["rosa", "ámbar", "ambar", "vainilla", "floral", "dulce"], diario: ["fresco", "cítrico", "citrico", "suave", "diario"], especial: ["premium", "intenso", "oud", "ámbar", "ambar", "oriental"], fresco: ["fresco", "cítrico", "citrico", "marino", "bergamota", "limón", "limon"], dulce: ["dulce", "vainilla", "caramelo", "gourmand", "tonka"] };
+    let list = perfumes.filter(p => p.stock !== false);
+    if (choice !== "todos") {
+        const keys = words[choice] || [];
+        const matched = list.filter(p => (choice === "especial" && p.premium) || keys.some(w => [p.nombre, p.descripcion, p.marca, p.categoria, ...(p.acordes || [])].join(" ").toLowerCase().includes(w)));
+        if (matched.length) list = matched;
+    }
+    list = list.slice().sort((a,b) => Number(b.destacado || b.premium) - Number(a.destacado || a.premium)).slice(0, 3);
+    target.innerHTML = "";
+    if (!list.length) { target.textContent = "No encontramos opciones disponibles por ahora."; return; }
+    list.forEach(p => {
+        const card = document.createElement("div"); card.className = "gift-result-card";
+        const title = document.createElement("strong"); title.textContent = p.nombre || "Fragancia";
+        const brand = document.createElement("span"); brand.textContent = p.marca || "Elixir House";
+        const price = document.createElement("span"); price.textContent = formatPrice(effectivePrice(p));
+        const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "VER PERFUME"; btn.addEventListener("click", () => { document.getElementById("catalogo")?.scrollIntoView({behavior:"smooth"}); if (searchInput) searchInput.value = p.nombre || ""; if (favoritesToggle) favoritesToggle.dataset.active = "false"; filterProducts(); });
+        card.append(title, brand, price, btn); target.appendChild(card);
+    });
+}
+document.getElementById("giftFindButton")?.addEventListener("click", findGiftIdeas);
+
 function formatPrice(price) {
     return new Intl.NumberFormat("es-AR", {
         style: "currency",
@@ -714,4 +741,4 @@ if (menuBtn && nav) {
 
 updateFavoritesUI();
 loadVendedores();
-loadPerfumes().then(renderRecentlyViewed);
+loadPerfumes().then(() => { renderRecentlyViewed(); findGiftIdeas(); });

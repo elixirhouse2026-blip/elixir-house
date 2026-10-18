@@ -3176,3 +3176,8 @@ body { background:#070707; }
 @media (max-width: 640px) {
     .apply-price-button, .clear-filters-button { width: 100%; }
 }
+
+/* Sección de recomendaciones para regalos */
+.gift-section{display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr);gap:28px;align-items:center;margin:42px auto;padding:clamp(22px,4vw,48px);max-width:1200px;border:1px solid rgba(212,175,55,.45);border-radius:18px;background:radial-gradient(ellipse at top right,rgba(212,175,55,.12),transparent 55%),#0d0d0d;color:#fff}
+.gift-copy .eyebrow{color:#d4af37;letter-spacing:.18em;font-size:.78rem}.gift-copy h2{font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.15}.gift-copy h2 span{color:#f1d46a}.gift-copy label{display:block;margin:16px 0 8px;color:#ddd}.gift-copy select{width:100%;padding:12px;border:1px solid #d4af37;border-radius:8px;background:#131313;color:#fff}.gift-find-button,.gift-result-card button{margin-top:12px;padding:12px 16px;border:1px solid #d4af37;border-radius:8px;background:#d4af37;color:#080808;font-weight:700;cursor:pointer}.gift-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.gift-result-card{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid rgba(212,175,55,.4);border-radius:12px;background:#131313;min-width:0}.gift-result-card strong{color:#f1d46a}.gift-result-card span{color:#ddd;font-size:.9rem}.gift-result-card button{margin-top:auto;font-size:.75rem;padding:10px 8px}
+@media(max-width:760px){.gift-section{grid-template-columns:1fr;margin:24px 12px;padding:20px}.gift-results{grid-template-columns:1fr}.gift-result-card{padding:14px}}
