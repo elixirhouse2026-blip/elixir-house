@@ -214,7 +214,7 @@ function filterProducts() {
     const maxPriceRaw = maxPriceFilter?.value.trim() ?? "";
     const minPrice = minPriceRaw === "" ? null : Number(minPriceRaw);
     const maxPrice = maxPriceRaw === "" ? null : Number(maxPriceRaw);
-    const subcategory = getActiveSubcategory();
+    const subcategory = "todos"; // Los botones de subcategorías fueron retirados del catálogo.
     const onlyFavorites = favoritesToggle?.dataset.active === "true";
     const finderAccord = document.getElementById("finderAccord")?.value || "todos";
     const accordKeywords = {
