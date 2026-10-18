@@ -23,7 +23,6 @@ const premiumGrid = document.getElementById("premiumGrid");
 const searchInput = document.getElementById("searchInput");
 const genderFilter = document.getElementById("genderFilter");
 const typeFilter = document.getElementById("typeFilter");
-const categoryFilter = document.getElementById("categoryFilter");
 const brandFilter = document.getElementById("brandFilter");
 const seasonFilter = document.getElementById("seasonFilter");
 const minPriceFilter = document.getElementById("minPriceFilter");
@@ -177,18 +176,6 @@ function buildDynamicFilters() {
     const categories = ["Verano", "Invierno", "Otoño", "Primavera"];
     const brands = [...new Set(perfumes.map(p => p.marca).filter(x => x && x !== "Sin marca"))].sort();
 
-    if (categoryFilter) {
-        const current = categoryFilter.value;
-        categoryFilter.innerHTML = '<option value="todos">Todas las categorías</option>';
-        categories.forEach(name => {
-            const option = document.createElement("option");
-            option.value = name;
-            option.textContent = name;
-            categoryFilter.appendChild(option);
-        });
-        if (categories.includes(current)) categoryFilter.value = current;
-    }
-
     if (brandFilter) {
         const current = brandFilter.value;
         brandFilter.innerHTML = '<option value="todos">Todas las marcas</option>';
@@ -202,46 +189,6 @@ function buildDynamicFilters() {
     }
 }
 
-function renderSubcategories() {
-    if (!subcategoryButtons) return;
-    const current = subcategoryButtons.querySelector(".subcategory-button.active")?.dataset.subcategory || "todos";
-    const categories = [...new Map(
-        perfumes
-            .flatMap(p => (p.temporadas || []).map(season => [season, p.genero]))
-    )].sort((a, b) => a[0].localeCompare(b[0], "es"));
-
-    subcategoryButtons.innerHTML = "";
-    const all = document.createElement("button");
-    all.type = "button";
-    all.className = "subcategory-button" + (current === "todos" ? " active" : "");
-    all.dataset.subcategory = "todos";
-    all.textContent = "TODOS";
-    subcategoryButtons.appendChild(all);
-
-    categories.forEach(([name, gender]) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "subcategory-button" + (current === name ? " active" : "");
-        button.dataset.subcategory = name;
-        button.dataset.gender = gender || "";
-        button.textContent = name.toUpperCase();
-        subcategoryButtons.appendChild(button);
-    });
-
-    subcategoryButtons.querySelectorAll(".subcategory-button").forEach(button => {
-        button.addEventListener("click", function () {
-            subcategoryButtons.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
-            button.classList.add("active");
-            if (genderFilter) genderFilter.value = button.dataset.gender || "todos";
-            if (categoryFilter) categoryFilter.value = "todos";
-            filterProducts();
-        });
-    });
-}
-
-function getActiveSubcategory() {
-    return subcategoryButtons?.querySelector(".subcategory-button.active")?.dataset.subcategory || "todos";
-}
 
 function applySort(items) {
     const list = [...items];
@@ -261,7 +208,6 @@ function filterProducts() {
     const search = searchInput?.value.toLowerCase().trim() || "";
     const gender = genderFilter?.value || "todos";
     const type = typeFilter?.value || "todos";
-    const category = categoryFilter?.value || "todos";
     const brand = brandFilter?.value || "todos";
     const minPriceRaw = minPriceFilter?.value.trim() ?? "";
     const maxPriceRaw = maxPriceFilter?.value.trim() ?? "";
@@ -287,7 +233,6 @@ function filterProducts() {
             accordMatch &&
             (type === "todos" || (type === "Otro producto" ? (p.tipo_producto || "Perfume") !== "Perfume" : (p.tipo_producto || "Perfume") === type)) &&
             (gender === "todos" || (p.tipo_producto || "Perfume") !== "Perfume" || p.genero === gender) &&
-            (category === "todos" || (p.temporadas || []).includes(category)) &&
             (brand === "todos" || p.marca === brand) &&
             (minPrice === null || effectivePrice(p) >= minPrice) &&
             (maxPrice === null || effectivePrice(p) <= maxPrice) &&
@@ -710,10 +655,8 @@ genderFilter?.addEventListener("change", function () {
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
     filterProducts();
 });
-categoryFilter?.addEventListener("change", filterProducts);
 brandFilter?.addEventListener("change", filterProducts);
 seasonFilter?.addEventListener("change", function () {
-    if (categoryFilter) categoryFilter.value = "todos";
     subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
     filterProducts();
@@ -729,7 +672,6 @@ document.getElementById("clearCatalogFilters")?.addEventListener("click", functi
     if (searchInput) searchInput.value = "";
     if (genderFilter) genderFilter.value = "todos";
     if (typeFilter) typeFilter.value = "todos";
-    if (categoryFilter) categoryFilter.value = "todos";
     if (brandFilter) brandFilter.value = "todos";
     if (seasonFilter) seasonFilter.value = "todos";
     if (minPriceFilter) minPriceFilter.value = "";
@@ -752,7 +694,6 @@ favoritesToggle?.addEventListener("click", function () {
 mainCategories.forEach(category => category.addEventListener("click", function () {
     if (genderFilter) genderFilter.value = category.dataset.gender;
     if (typeFilter) typeFilter.value = "Perfume";
-    if (categoryFilter) categoryFilter.value = "todos";
     subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
     filterProducts();
@@ -760,7 +701,6 @@ mainCategories.forEach(category => category.addEventListener("click", function (
 
 genderNav.forEach(link => link.addEventListener("click", function () {
     if (genderFilter) genderFilter.value = link.dataset.gender;
-    if (categoryFilter) categoryFilter.value = "todos";
     subcategoryButtons?.querySelectorAll(".subcategory-button").forEach(b => b.classList.remove("active"));
     subcategoryButtons?.querySelector('[data-subcategory="todos"]')?.classList.add("active");
     filterProducts();
