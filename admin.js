@@ -130,9 +130,54 @@ async function checkSession() {
     await showAdmin();
 }
 
+// ---------- Pestañas del panel ----------
+const ADMIN_TABS = ["productos", "solicitudes", "ventas", "marcas"];
+
+function setAdminTab(name) {
+    if (!ADMIN_TABS.includes(name)) name = "productos";
+    document.querySelectorAll("#adminSection [data-tab]").forEach(function (el) {
+        el.classList.toggle("tab-hidden", el.dataset.tab !== name);
+    });
+    document.querySelectorAll("#adminTabs [data-tab-target]").forEach(function (button) {
+        const on = button.dataset.tabTarget === name;
+        button.classList.toggle("active", on);
+        button.setAttribute("aria-selected", String(on));
+    });
+    try { sessionStorage.setItem("elixirAdminTab", name); } catch (error) { /* sin almacenamiento */ }
+}
+
+document.querySelectorAll("#adminTabs [data-tab-target]").forEach(function (button) {
+    button.addEventListener("click", function () {
+        setAdminTab(button.dataset.tabTarget);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+});
+
+$("pendingChip")?.addEventListener("click", function () {
+    setAdminTab("solicitudes");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+let requestsPollingStarted = false;
+let lastPendingOrders = null;
+
+function startRequestsPolling() {
+    if (requestsPollingStarted) return;
+    requestsPollingStarted = true;
+    // Cada minuto se revisan las solicitudes nuevas mientras el panel está abierto y visible.
+    setInterval(async function () {
+        if (adminSection.classList.contains("hidden") || document.visibilityState !== "visible") return;
+        await loadPurchaseRequests();
+    }, 60000);
+}
+
 async function showAdmin() {
     loginSection.classList.add("hidden");
     adminSection.classList.remove("hidden");
+    let savedTab = "productos";
+    try { savedTab = sessionStorage.getItem("elixirAdminTab") || "productos"; } catch (error) { /* sin almacenamiento */ }
+    setAdminTab(savedTab);
+    startRequestsPolling();
     await loadData();
 }
 
@@ -176,7 +221,6 @@ async function loadData() {
         loadPurchaseRequests()
     ]);
     updateStatistics();
-    renderLowStockAlert();
     renderManagementLists();
     populatePerfumeSelects();
     populateConfirmedSaleForm();
@@ -184,17 +228,32 @@ async function loadData() {
     renderSalesHistory();
 }
 
+let stockQtySupported = false;
+
+function qtyOf(perfume) {
+    const raw = perfume?.stock_cantidad;
+    if (raw === null || raw === undefined || raw === "" || !Number.isFinite(Number(raw))) return null;
+    return Math.max(0, Math.floor(Number(raw)));
+}
+
+function updateStockQtyFieldVisibility() {
+    $("stockQtyField")?.classList.toggle("hidden", !stockQtySupported);
+    $("stockQtyHint")?.classList.toggle("hidden", stockQtySupported);
+}
+
 async function loadPerfumes() {
-    const result = await supabaseClient
-        .from("perfumes")
-        .select(`
+    const base = `
             id, nombre, tipo_producto, genero, precio, descripcion, acordes, imagen, stock, premium, temporadas,
             destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
             marca_id, categoria_id,
             marcas (id, nombre),
             categorias (id, nombre, genero)
-        `)
-        .order("id", { ascending: false });
+        `;
+    // La columna stock_cantidad es opcional: si todavía no existe, el panel funciona igual sin ella.
+    let result = await supabaseClient.from("perfumes").select(base + ", stock_cantidad").order("id", { ascending: false });
+    stockQtySupported = !result.error;
+    if (result.error) result = await supabaseClient.from("perfumes").select(base).order("id", { ascending: false });
+    updateStockQtyFieldVisibility();
 
     if (result.error) {
         console.error("Error cargando perfumes:", result.error);
@@ -203,8 +262,7 @@ async function loadPerfumes() {
 
     perfumes = result.data || [];
     updateStatistics();
-    renderAdminProducts(perfumes);
-    renderLowStockAlert();
+    renderAdminProducts(getAdminFilteredProducts());
 }
 
 async function loadBrands() {
@@ -292,31 +350,85 @@ async function loadPurchaseRequests() {
     renderPurchaseRequests();
 }
 
+// Las unidades de un mismo pedido del carrito se guardan juntas (misma fecha y vendedor).
+function requestGroupKey(req) {
+    return `${req.created_at}|${req.vendedor_id ?? ""}`;
+}
+
+function orderedRequestGroups() {
+    const groups = new Map();
+    solicitudesCompra.forEach(function (req) {
+        const key = requestGroupKey(req);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(req);
+    });
+    return [...groups.entries()].map(([key, rows]) => ({ key, rows }));
+}
+
+function updatePendingBadge() {
+    const pendingOrders = orderedRequestGroups().filter(g => g.rows.some(r => r.estado === "pendiente")).length;
+    const badge = $("pendingBadge");
+    if (badge) {
+        badge.textContent = String(pendingOrders);
+        badge.classList.toggle("is-empty", pendingOrders === 0);
+        if (lastPendingOrders !== null && pendingOrders > lastPendingOrders) {
+            badge.classList.remove("flash");
+            void badge.offsetWidth;
+            badge.classList.add("flash");
+        }
+    }
+    const chip = $("pendingChip");
+    if (chip) {
+        chip.classList.toggle("is-empty", pendingOrders === 0);
+        const text = $("pendingChipText");
+        if (text) text.textContent = pendingOrders === 1 ? "1 pedido pendiente" : `${pendingOrders} pedidos pendientes`;
+    }
+    document.title = (pendingOrders ? `(${pendingOrders}) ` : "") + "Elixir House | Administración";
+    lastPendingOrders = pendingOrders;
+}
+
 function renderPurchaseRequests() {
     const body = $("purchaseRequestsBody");
     const message = $("purchaseRequestsMessage");
     if (!body) return;
     body.innerHTML = "";
+    const groups = orderedRequestGroups();
     if (!solicitudesCompra.length) {
         body.innerHTML = '<tr><td colspan="6">Todavía no hay solicitudes registradas.</td></tr>';
     } else {
-        solicitudesCompra.forEach(req => {
-            const tr = document.createElement("tr");
-            const status = req.estado || "pendiente";
-            const statusLabel = status === "confirmada" ? "CONFIRMADA" : status === "cancelada" ? "CANCELADA" : "PENDIENTE";
-            const actions = status === "pendiente"
-                ? `<button type="button" class="secondary-button request-confirm-button" data-id="${escapeHTML(req.id)}">CONFIRMAR COMPRA</button> <button type="button" class="secondary-button request-cancel-button" data-id="${escapeHTML(req.id)}">CANCELAR</button>`
-                : `<span class="request-status request-status-${status}">${statusLabel}</span>`;
-            tr.innerHTML = `<td><code>${escapeHTML(String(req.id).slice(0, 8).toUpperCase())}</code></td><td>${escapeHTML(formatDate(req.created_at))}</td><td>${escapeHTML(req.vendedores?.nombre || "Vendedor no disponible")}</td><td>${escapeHTML(req.producto_nombre || req.perfumes?.nombre || "Consulta general")}</td><td>${req.precio_solicitado == null ? "—" : formatPrice(req.precio_solicitado)}</td><td>${actions}</td>`;
-            body.appendChild(tr);
+        groups.forEach(function (group, groupIndex) {
+            const multi = group.rows.length > 1;
+            const pendingRows = group.rows.filter(r => r.estado === "pendiente");
+            const groupTotal = group.rows.reduce((sum, r) => sum + (Number(r.precio_solicitado) || 0), 0);
+            group.rows.forEach(function (req, rowIndex) {
+                const tr = document.createElement("tr");
+                tr.className = `order-group-${groupIndex % 2}` + (multi ? (rowIndex === 0 ? " order-group-start" : " order-group-member") : "");
+                const status = req.estado || "pendiente";
+                const statusLabel = status === "confirmada" ? "CONFIRMADA" : status === "cancelada" ? "CANCELADA" : "PENDIENTE";
+                let actions = status === "pendiente"
+                    ? `<button type="button" class="secondary-button request-confirm-button" data-id="${escapeHTML(req.id)}">CONFIRMAR COMPRA</button> <button type="button" class="secondary-button request-cancel-button" data-id="${escapeHTML(req.id)}">CANCELAR</button>`
+                    : `<span class="request-status request-status-${status}">${statusLabel}</span>`;
+                if (multi && rowIndex === 0 && pendingRows.length >= 2) {
+                    actions += `<div class="order-group-actions"><button type="button" class="primary-button order-confirm-all" data-key="${escapeHTML(group.key)}">CONFIRMAR PEDIDO COMPLETO (${pendingRows.length})</button> <button type="button" class="secondary-button order-cancel-all" data-key="${escapeHTML(group.key)}">CANCELAR PEDIDO</button></div>`;
+                }
+                const orderChip = (multi && rowIndex === 0)
+                    ? `<span class="order-chip">PEDIDO · ${group.rows.length} productos · ${formatPrice(groupTotal)}</span>`
+                    : "";
+                tr.innerHTML = `<td><code>${escapeHTML(String(req.id).slice(0, 8).toUpperCase())}</code></td><td>${escapeHTML(formatDate(req.created_at))}${orderChip}</td><td>${escapeHTML(req.vendedores?.nombre || "Vendedor no disponible")}</td><td>${escapeHTML(req.producto_nombre || req.perfumes?.nombre || "Consulta general")}</td><td>${req.precio_solicitado == null ? "—" : formatPrice(req.precio_solicitado)}</td><td>${actions}</td>`;
+                body.appendChild(tr);
+            });
         });
     }
     if (message) {
         const pending = solicitudesCompra.filter(r => r.estado === "pendiente").length;
-        message.textContent = `${solicitudesCompra.length} solicitudes registradas · ${pending} pendiente${pending === 1 ? "" : "s"}. Las solicitudes no suman puntos hasta confirmarse.`;
+        const orders = groups.length;
+        message.textContent = `${orders} pedido${orders === 1 ? "" : "s"} (${solicitudesCompra.length} producto${solicitudesCompra.length === 1 ? "" : "s"}) · ${pending} pendiente${pending === 1 ? "" : "s"}. Las solicitudes no suman puntos hasta confirmarse.`;
     }
     body.querySelectorAll(".request-confirm-button").forEach(button => button.addEventListener("click", () => confirmPurchaseRequest(button.dataset.id)));
     body.querySelectorAll(".request-cancel-button").forEach(button => button.addEventListener("click", () => cancelPurchaseRequest(button.dataset.id)));
+    body.querySelectorAll(".order-confirm-all").forEach(button => button.addEventListener("click", () => confirmRequestGroup(button.dataset.key)));
+    body.querySelectorAll(".order-cancel-all").forEach(button => button.addEventListener("click", () => cancelRequestGroup(button.dataset.key)));
+    updatePendingBadge();
 }
 
 async function confirmPurchaseRequest(requestId) {
@@ -332,8 +444,10 @@ async function confirmPurchaseRequest(requestId) {
         alert("No se pudo confirmar. Revisá que hayas ejecutado el SQL de solicitudes y la función de confirmación en Supabase.");
         return;
     }
+    await discountStockFor([req]);
     await Promise.all([loadPurchaseRequests(), loadSales()]);
     updateStatistics();
+    renderAdminProducts(getAdminFilteredProducts());
     await loadSellerStats();
     renderSalesHistory();
     alert("Compra confirmada. Ya cuenta en el historial de ventas y los puntos del vendedor.");
@@ -355,6 +469,72 @@ async function cancelPurchaseRequest(requestId) {
         return;
     }
     await loadPurchaseRequests();
+}
+
+async function confirmRequestGroup(key) {
+    const rows = solicitudesCompra.filter(r => requestGroupKey(r) === key && r.estado === "pendiente");
+    if (rows.length < 2) return;
+    if (rows.some(r => r.precio_solicitado == null)) {
+        alert("Algunos productos de este pedido no tienen precio solicitado. Confirmalos de a uno.");
+        return;
+    }
+    const total = rows.reduce((sum, r) => sum + Number(r.precio_solicitado), 0);
+    if (!confirm(`¿Confirmar el pedido completo (${rows.length} productos) por ${formatPrice(total)}?\n\nSe registrarán ${rows.length} ventas al precio solicitado. Si acordaste otro precio, confirmá los productos de a uno.`)) return;
+
+    const confirmed = [];
+    for (const req of rows) {
+        const result = await supabaseClient.rpc("confirmar_solicitud_compra", { p_solicitud_id: req.id, p_precio: Number(req.precio_solicitado) });
+        if (result.error) {
+            console.error("No se pudo confirmar una solicitud del pedido:", result.error);
+            break;
+        }
+        confirmed.push(req);
+    }
+    await discountStockFor(confirmed);
+    await Promise.all([loadPurchaseRequests(), loadSales()]);
+    updateStatistics();
+    renderAdminProducts(getAdminFilteredProducts());
+    await loadSellerStats();
+    renderSalesHistory();
+    alert(confirmed.length === rows.length
+        ? `Pedido confirmado: ${confirmed.length} ventas registradas.`
+        : `Se confirmaron ${confirmed.length} de ${rows.length} productos. Las restantes siguen pendientes: revisá la función de confirmación y las políticas en Supabase.`);
+}
+
+async function cancelRequestGroup(key) {
+    const rows = solicitudesCompra.filter(r => requestGroupKey(r) === key && r.estado === "pendiente");
+    if (!rows.length) return;
+    if (!confirm(`¿Cancelar las ${rows.length} solicitudes pendientes de este pedido? Quedarán registradas como canceladas.`)) return;
+    const sessionResult = await supabaseClient.auth.getSession();
+    const result = await supabaseClient.from("solicitudes_compra").update({
+        estado: "cancelada",
+        cancelado_at: new Date().toISOString(),
+        cancelado_por: sessionResult.data?.session?.user?.id || null
+    }).in("id", rows.map(r => r.id)).eq("estado", "pendiente");
+    if (result.error) {
+        console.error("No se pudo cancelar el pedido:", result.error);
+        alert("No se pudo cancelar el pedido. Revisá los permisos de Supabase.");
+        return;
+    }
+    await loadPurchaseRequests();
+}
+
+// Descuenta del stock una unidad por cada compra confirmada (solo productos con unidades cargadas).
+async function discountStockFor(rows) {
+    if (!stockQtySupported) return;
+    const counts = new Map();
+    rows.forEach(function (row) {
+        if (!row.perfume_id) return;
+        counts.set(String(row.perfume_id), (counts.get(String(row.perfume_id)) || 0) + 1);
+    });
+    for (const [id, units] of counts) {
+        const perfume = perfumes.find(p => String(p.id) === id);
+        const qty = perfume ? qtyOf(perfume) : null;
+        if (!perfume || qty === null) continue;
+        const next = Math.max(0, qty - units);
+        const result = await supabaseClient.from("perfumes").update({ stock_cantidad: next, stock: next > 0 }).eq("id", perfume.id);
+        if (!result.error) { perfume.stock_cantidad = next; perfume.stock = next > 0; }
+    }
 }
 
 $("refreshPurchaseRequests")?.addEventListener("click", loadPurchaseRequests);
@@ -469,6 +649,8 @@ confirmedSaleForm?.addEventListener("submit", async function (event) {
         return;
     }
     if (confirmedSaleMessage) confirmedSaleMessage.textContent = "¡Venta confirmada! Ya se actualizarán el historial y los puntos de venta.";
+    await discountStockFor([{ perfume_id: confirmedSalePerfume.value }]);
+    renderAdminProducts(getAdminFilteredProducts());
     confirmedSaleForm.reset();
     await loadSales();
     updateStatistics();
@@ -779,7 +961,22 @@ perfumeForm?.addEventListener("submit", async function (event) {
         formMessage.style.color = "#ff6b6b";
         return;
     }
-    const stock = $("perfumeStock").checked;
+    let stock = $("perfumeStock").checked;
+    let stock_cantidad;   // undefined = la columna no existe, no se envía
+    if (stockQtySupported) {
+        const qtyText = ($("perfumeStockQty")?.value || "").trim();
+        if (qtyText === "") stock_cantidad = null;
+        else {
+            const n = Math.floor(Number(qtyText));
+            if (!Number.isFinite(n) || n < 0) {
+                formMessage.textContent = "Ingresá una cantidad de unidades válida (0 o más).";
+                formMessage.style.color = "#ff6b6b";
+                return;
+            }
+            stock_cantidad = n;
+            stock = n > 0;   // con unidades cargadas, el stock se deduce de la cantidad
+        }
+    }
     const premium = $("perfumePremium").checked;
     const destacado = $("perfumeFeatured")?.checked || false;
     const promocion_activa = $("perfumePromoActive")?.checked || false;
@@ -814,13 +1011,16 @@ perfumeForm?.addEventListener("submit", async function (event) {
             return;
         }
 
+        formMessage.textContent = "Optimizando imagen...";
+        const optimized = await optimizeImage(imageFile);
         formMessage.textContent = "Subiendo imagen...";
-        const extension = imageFile.name.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "");
-        const path = "perfumes/" + Date.now() + "-" + Math.random().toString(36).slice(2, 10) + "." + (extension || "jpg");
+        const path = "perfumes/" + Date.now() + "-" + Math.random().toString(36).slice(2, 10) + "." + optimized.extension;
 
-        const upload = await supabaseClient.storage.from("perfumes").upload(path, imageFile, {
-            cacheControl: "3600",
-            upsert: false
+        // El nombre del archivo es único, por eso puede guardarse en caché por mucho tiempo.
+        const upload = await supabaseClient.storage.from("perfumes").upload(path, optimized.file, {
+            cacheControl: "31536000",
+            upsert: false,
+            contentType: optimized.file.type || undefined
         });
 
         if (upload.error) {
@@ -834,10 +1034,9 @@ perfumeForm?.addEventListener("submit", async function (event) {
     }
 
     const data = { nombre, tipo_producto, marca_id: marcaId, genero, categoria_id: categoriaId, temporadas, precio, descripcion, acordes, imagen, stock, premium, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin };
+    if (stock_cantidad !== undefined) data.stock_cantidad = stock_cantidad;
 
     let result;
-    let oldProduct = null;
-    if (editingPerfumeId) oldProduct = perfumes.find(p => String(p.id) === String(editingPerfumeId)) || null;
     if (editingPerfumeId) {
         result = await supabaseClient.from("perfumes").update(data).eq("id", editingPerfumeId);
     } else {
@@ -851,16 +1050,6 @@ perfumeForm?.addEventListener("submit", async function (event) {
         return;
     }
 
-    if (editingPerfumeId && oldProduct) {
-        const changes = [];
-        if (Number(oldProduct.precio) !== Number(precio)) changes.push(`Precio: ${formatPrice(oldProduct.precio)} → ${formatPrice(precio)}`);
-        if (oldProduct.stock !== stock) changes.push(`Stock: ${oldProduct.stock ? "Con stock" : "Sin stock"} → ${stock ? "Con stock" : "Sin stock"}`);
-        if (changes.length) {
-            const history = JSON.parse(localStorage.getItem("elixirProductChangeHistory") || "[]");
-            history.unshift({ fecha: new Date().toISOString(), producto: nombre, producto_id: editingPerfumeId, cambios: changes.join(" | ") });
-            localStorage.setItem("elixirProductChangeHistory", JSON.stringify(history.slice(0, 300)));
-        }
-    }
     formMessage.textContent = editingPerfumeId ? "Producto actualizado correctamente." : "Producto agregado correctamente.";
     duplicatedImageURL = null;
     formMessage.style.color = "#65c77a";
@@ -879,11 +1068,67 @@ perfumeForm?.addEventListener("submit", async function (event) {
     updateStatistics();
 });
 
-function renderAdminProducts(products) {
+// ---------- Paginación del listado de productos (máx. 12 por página) ----------
+const ADMIN_PAGE_SIZE = 12;
+let adminCurrentPage = 1;
+
+function getAdminFilteredProducts() {
+    const term = (adminSearch?.value || "").toLowerCase().trim();
+    if (!term) return perfumes;
+    return perfumes.filter(p => {
+        const text = [p.nombre, p.genero, p.tipo_producto, p.descripcion, p.marcas?.nombre, p.categorias?.nombre, ...(p.acordes || []), ...(p.temporadas || [])].join(" ").toLowerCase();
+        return text.includes(term);
+    });
+}
+
+function renderAdminPagination(totalItems, totalPages) {
+    const nav = $("adminPagination");
+    if (!nav) return;
+    nav.innerHTML = "";
+    if (totalItems <= ADMIN_PAGE_SIZE) return;
+
+    const makeButton = (label, page, extra = {}) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        if (extra.disabled) button.disabled = true;
+        if (extra.active) button.classList.add("active");
+        if (extra.aria) button.setAttribute("aria-label", extra.aria);
+        button.addEventListener("click", () => changeAdminPage(page));
+        return button;
+    };
+
+    nav.appendChild(makeButton("‹ Anterior", adminCurrentPage - 1, { disabled: adminCurrentPage === 1 }));
+    for (let page = 1; page <= totalPages; page++) {
+        nav.appendChild(makeButton(String(page), page, { active: page === adminCurrentPage, aria: `Página ${page}` }));
+    }
+    nav.appendChild(makeButton("Siguiente ›", adminCurrentPage + 1, { disabled: adminCurrentPage === totalPages }));
+
+    const label = document.createElement("span");
+    label.className = "page-label";
+    const from = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE + 1;
+    const to = Math.min(adminCurrentPage * ADMIN_PAGE_SIZE, totalItems);
+    label.textContent = `Mostrando ${from}–${to} de ${totalItems} · Página ${adminCurrentPage} de ${totalPages}`;
+    nav.appendChild(label);
+}
+
+function changeAdminPage(page) {
+    adminCurrentPage = page;
+    renderAdminProducts(getAdminFilteredProducts());
+    document.querySelector(".products-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderAdminProducts(allProducts) {
     if (!adminProducts) return;
     adminProducts.innerHTML = "";
 
-    if (!products.length) {
+    const totalPages = Math.max(1, Math.ceil(allProducts.length / ADMIN_PAGE_SIZE));
+    adminCurrentPage = Math.min(Math.max(1, adminCurrentPage), totalPages);
+    const pageStart = (adminCurrentPage - 1) * ADMIN_PAGE_SIZE;
+    const products = allProducts.slice(pageStart, pageStart + ADMIN_PAGE_SIZE);
+    renderAdminPagination(allProducts.length, totalPages);
+
+    if (!allProducts.length) {
         adminProducts.innerHTML = '<p class="empty-management">No hay perfumes que coincidan con la búsqueda.</p>';
         return;
     }
@@ -894,6 +1139,19 @@ function renderAdminProducts(products) {
 
         const brand = perfume.marcas?.nombre || "Sin marca";
         const category = (perfume.temporadas || []).join(", ") || perfume.categorias?.nombre || "Sin temporada";
+
+        const qty = stockQtySupported ? qtyOf(perfume) : null;
+        let stockStatusHTML;
+        let stockControlsHTML;
+        if (qty !== null) {
+            const cls = qty === 0 ? "status-no-stock" : (qty <= 3 ? "status-low" : "status-stock");
+            stockStatusHTML = `<span class="${cls}">● ${qty === 0 ? "SIN STOCK" : qty + (qty === 1 ? " UNIDAD" : " UNIDADES") + (qty <= 3 ? " · POCAS" : "")}</span>`;
+            stockControlsHTML = `<div class="stock-stepper" role="group" aria-label="Unidades de ${escapeHTML(perfume.nombre)}"><button type="button" data-stock-action="dec" data-id="${perfume.id}" aria-label="Restar una unidad">−</button><span>${qty}</span><button type="button" data-stock-action="inc" data-id="${perfume.id}" aria-label="Sumar una unidad">+</button></div>`;
+        } else {
+            stockStatusHTML = `<span class="${perfume.stock ? "status-stock" : "status-no-stock"}">● ${perfume.stock ? "CON STOCK" : "SIN STOCK"}</span>`;
+            stockControlsHTML = `<button type="button" class="stock-toggle-button" data-stock-action="toggle" data-id="${perfume.id}">${perfume.stock ? "MARCAR SIN STOCK" : "MARCAR CON STOCK"}</button>`
+                + (stockQtySupported ? `<button type="button" class="stock-toggle-button" data-stock-action="count" data-id="${perfume.id}">CONTAR UNIDADES</button>` : "");
+        }
 
         card.innerHTML = `
             <div class="admin-product-image">
@@ -909,9 +1167,10 @@ function renderAdminProducts(products) {
                 <div class="admin-product-price">${perfume.promocion_activa && Number(perfume.descuento_porcentaje)>0 ? `<del>${formatPrice(perfume.precio)}</del> ${formatPrice(Number(perfume.precio)*(1-Number(perfume.descuento_porcentaje)/100))} <span class="admin-promo-badge">${escapeHTML(perfume.descuento_porcentaje)}% OFF</span>` : formatPrice(perfume.precio)}</div>
                     ${perfume.destacado ? '<span class="admin-featured-badge">DESTACADO EN INICIO</span>' : ''}
                 <div class="admin-product-status">
-                    <span class="${perfume.stock ? "status-stock" : "status-no-stock"}">● ${perfume.stock ? "CON STOCK" : "SIN STOCK"}</span>
+                    ${stockStatusHTML}
                     ${perfume.premium ? '<span class="admin-premium-badge">♦ PREMIUM</span>' : ""}
                 </div>
+                <div class="admin-stock-controls">${stockControlsHTML}</div>
                 <div class="product-actions">
                     <button type="button" class="edit-button" data-id="${perfume.id}">EDITAR</button>
                     <button type="button" class="delete-button" data-id="${perfume.id}">ELIMINAR</button>
@@ -925,6 +1184,40 @@ function renderAdminProducts(products) {
     adminProducts.querySelectorAll(".edit-button").forEach(btn => btn.addEventListener("click", () => editPerfume(btn.dataset.id)));
     adminProducts.querySelectorAll(".delete-button").forEach(btn => btn.addEventListener("click", () => deletePerfume(btn.dataset.id)));
 }
+
+async function handleStockAction(action, id, button) {
+    const perfume = perfumes.find(p => String(p.id) === String(id));
+    if (!perfume) return;
+    const qty = stockQtySupported ? qtyOf(perfume) : null;
+    let patch = null;
+    if (action === "inc") patch = { stock_cantidad: (qty ?? 0) + 1, stock: true };
+    else if (action === "dec") { const next = Math.max(0, (qty ?? 0) - 1); patch = { stock_cantidad: next, stock: next > 0 }; }
+    else if (action === "toggle") patch = { stock: !perfume.stock };
+    else if (action === "count") {
+        const entered = prompt("¿Cuántas unidades hay disponibles?", "1");
+        if (entered === null) return;
+        const n = Math.floor(Number(entered));
+        if (!Number.isFinite(n) || n < 0) { alert("Ingresá un número válido (0 o más)."); return; }
+        patch = { stock_cantidad: n, stock: n > 0 };
+    }
+    if (!patch) return;
+    if (button) button.disabled = true;
+    const result = await supabaseClient.from("perfumes").update(patch).eq("id", perfume.id);
+    if (result.error) {
+        console.error("No se pudo actualizar el stock:", result.error);
+        alert("No se pudo actualizar el stock. Revisá la conexión y los permisos de Supabase.");
+        renderAdminProducts(getAdminFilteredProducts());
+        return;
+    }
+    Object.assign(perfume, patch);
+    updateStatistics();
+    renderAdminProducts(getAdminFilteredProducts());
+}
+
+adminProducts?.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-stock-action]");
+    if (button) handleStockAction(button.dataset.stockAction, button.dataset.id, button);
+});
 
 function editPerfume(id) {
     const perfume = perfumes.find(p => String(p.id) === String(id));
@@ -945,6 +1238,7 @@ function editPerfume(id) {
     $("perfumeDescription").value = perfume.descripcion || "";
     [1, 2, 3].forEach((n, i) => { const el = $(`perfumeAccord${n}`); if (el) el.value = (perfume.acordes || [])[i] || ""; });
     $("perfumeStock").checked = perfume.stock === true;
+    if ($("perfumeStockQty")) $("perfumeStockQty").value = qtyOf(perfume) ?? "";
     $("perfumePremium").checked = perfume.premium === true;
     if ($("perfumeFeatured")) $("perfumeFeatured").checked = perfume.destacado === true;
     if ($("perfumePromoActive")) $("perfumePromoActive").checked = perfume.promocion_activa === true;
@@ -981,8 +1275,32 @@ async function deletePerfume(id) {
     await loadSales();
     updateStatistics();
     renderSalesHistory();
-    renderLowStockAlert();
-    renderChangeHistory();
+}
+
+// Reduce la foto a 900 px y la convierte a WebP: se ven igual y la web carga mucho más rápido.
+async function optimizeImage(file, maxSide = 900, quality = 0.82) {
+    const original = {
+        file: file,
+        extension: (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg"
+    };
+    try {
+        if (!window.createImageBitmap || file.type === "image/gif" || file.type === "image/svg+xml") return original;
+        const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const width = Math.max(1, Math.round(bitmap.width * scale));
+        const height = Math.max(1, Math.round(bitmap.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+        if (bitmap.close) bitmap.close();
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
+        if (!blob || blob.type !== "image/webp" || blob.size >= file.size) return original;
+        return { file: blob, extension: "webp" };
+    } catch (error) {
+        console.warn("No se pudo optimizar la imagen; se sube la original.", error);
+        return original;
+    }
 }
 
 function clearImagePreview() {
@@ -1007,12 +1325,8 @@ perfumeImageFile?.addEventListener("change", function () {
 });
 
 adminSearch?.addEventListener("input", function () {
-    const term = this.value.toLowerCase().trim();
-    const filtered = !term ? perfumes : perfumes.filter(p => {
-        const text = [p.nombre, p.genero, p.tipo_producto, p.descripcion, p.marcas?.nombre, p.categorias?.nombre, ...(p.acordes || []), ...(p.temporadas || [])].join(" ").toLowerCase();
-        return text.includes(term);
-    });
-    renderAdminProducts(filtered);
+    adminCurrentPage = 1;
+    renderAdminProducts(getAdminFilteredProducts());
 });
 
 async function loadSellerStats() {
@@ -1134,57 +1448,8 @@ function cancelManagementEdits() {
     cancelCategoryEdit();
 }
 
-function csvEscape(value) {
-    const text = String(value ?? "");
-    return '"' + text.replace(/"/g, '""') + '"';
-}
-
-function downloadCSV(filename, rows) {
-    if (!rows.length) { alert("No hay datos para exportar."); return; }
-    const csv = "\uFEFF" + rows.map(row => row.map(csvEscape).join(";")).join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-}
-
-function exportCatalogCSV() {
-    const rows = [["ID", "Producto", "Tipo", "Marca", "Género", "Temporadas", "Acordes", "Precio lista", "Descuento %", "Precio actual", "Stock", "Premium", "Destacado"]];
-    perfumes.forEach(p => rows.push([p.id, p.nombre, p.tipo_producto, p.marcas?.nombre || "", p.genero || "", (p.temporadas || []).join(", "), (p.acordes || []).join(", "), p.precio, p.promocion_activa ? p.descuento_porcentaje : 0, Number(p.precio) * (p.promocion_activa ? (1 - Number(p.descuento_porcentaje || 0) / 100) : 1), p.stock ? "Con stock" : "Sin stock", p.premium ? "Sí" : "No", p.destacado ? "Sí" : "No"]));
-    downloadCSV("elixir-house-catalogo.csv", rows);
-}
-
-function exportSalesCSV() {
-    const rows = [["Fecha", "Vendedor", "Producto", "Precio"]];
-    ventas.forEach(s => rows.push([formatDate(s.created_at), s.vendedores?.nombre || "", s.perfumes?.nombre || "Producto eliminado", s.precio ?? s.perfumes?.precio ?? 0]));
-    downloadCSV("elixir-house-ventas.csv", rows);
-}
-
-function renderLowStockAlert() {
-    const panel = $("lowStockAlert");
-    if (!panel) return;
-    const out = perfumes.filter(p => p.stock === false);
-    panel.innerHTML = out.length
-        ? `<strong>Atención: ${out.length} producto${out.length === 1 ? "" : "s"} sin stock</strong><ul>${out.slice(0, 8).map(p => `<li>${escapeHTML(p.nombre)}${p.marcas?.nombre ? ` · ${escapeHTML(p.marcas.nombre)}` : ""}</li>`).join("")}</ul>${out.length > 8 ? `<small>Y ${out.length - 8} más.</small>` : ""}`
-        : "Todos los productos figuran con stock.";
-    panel.classList.toggle("has-alerts", out.length > 0);
-}
-
-function renderChangeHistory() {
-    const body = $("changeHistoryBody");
-    if (!body) return;
-    const history = JSON.parse(localStorage.getItem("elixirProductChangeHistory") || "[]");
-    body.innerHTML = history.length ? history.slice(0, 30).map(item => `<tr><td>${escapeHTML(formatDate(item.fecha))}</td><td>${escapeHTML(item.producto)}</td><td>${escapeHTML(item.cambios)}</td></tr>`).join("") : '<tr><td colspan="3">Todavía no hay cambios de precio o stock registrados en este navegador.</td></tr>';
-}
-
-document.getElementById("exportCatalogCSV")?.addEventListener("click", exportCatalogCSV);
-document.getElementById("exportSalesCSV")?.addEventListener("click", exportSalesCSV);
-document.getElementById("refreshChangeHistory")?.addEventListener("click", renderChangeHistory);
-
 async function init() {
     updateFavoritesUIIfNeeded();
-    renderChangeHistory();
     await checkSession();
 }
 

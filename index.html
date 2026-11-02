@@ -22,8 +22,10 @@
 
     <title>Elixir House | Perfumes</title>
 
-    <link rel="stylesheet" href="style.css?v=promo-fix-6">
+    <link rel="stylesheet" href="style.css?v=mejoras-20261101">
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Elixir House">
@@ -86,16 +88,36 @@
                 PREMIUM
             </a>
 
+            <a href="#como-comprar">
+                CÓMO COMPRAR
+            </a>
+
         </nav>
 
 
-        <button
-            class="menu-btn"
-            id="menuBtn"
-            type="button"
-        >
-            ☰
-        </button>
+        <div class="header-actions">
+
+            <button
+                class="header-cart"
+                id="headerCartButton"
+                type="button"
+                aria-label="Abrir carrito"
+                title="Tu carrito"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM1 2v2h2l3.6 7.6-1.4 2.4A2 2 0 0 0 7 17h12v-2H7.4l1.1-2h7.5a2 2 0 0 0 1.7-1l3.6-6.5A1 1 0 0 0 20.4 4H5.2l-.9-2H1Z"/></svg>
+                <span class="header-cart-label">CARRITO</span>
+                <b class="cart-count" data-cart-count>0</b>
+            </button>
+
+            <button
+                class="menu-btn"
+                id="menuBtn"
+                type="button"
+            >
+                ☰
+            </button>
+
+        </div>
 
     </header>
 
@@ -285,10 +307,8 @@
                  FILTROS
                  ======================================== -->
 
-            <div class="filters">
-
-
-                <!-- BUSCADOR -->
+            <!-- BARRA PRINCIPAL: buscador + botón de filtros (celular) -->
+            <div class="catalog-toolbar">
 
                 <div class="search-box">
 
@@ -296,6 +316,7 @@
                         type="text"
                         id="searchInput"
                         placeholder="Buscar perfumes y productos..."
+                        aria-label="Buscar perfumes y productos"
                     >
 
                     <span>
@@ -304,62 +325,63 @@
 
                 </div>
 
-
-
-                <!-- TIPO DE PRODUCTO -->
-                <select id="typeFilter" aria-label="Tipo de producto">
-                    <option value="todos">Todos los productos</option>
-                    <option value="Perfume">Perfumes</option>
-                    <option value="Otro producto">Otros productos</option>
-                </select>
-
-                <!-- GÉNERO -->
-
-                <select id="genderFilter">
-
-                    <option value="todos">
-                        Todos
-                    </option>
-
-                    <option value="Hombre">
-                        Hombre
-                    </option>
-
-                    <option value="Mujer">
-                        Mujer
-                    </option>
-
-                    <option value="Unisex">
-                        Unisex
-                    </option>
-
-                </select>
-<!-- TEMPORADA -->
-                <select id="seasonFilter" aria-label="Filtrar por temporada">
-                    <option value="todos">Todas las temporadas</option>
-                    <option value="Verano">Verano</option>
-                    <option value="Otoño">Otoño</option>
-                    <option value="Invierno">Invierno</option>
-                    <option value="Primavera">Primavera</option>
-                </select>
-
-                <!-- MARCA -->
-
-                <select id="brandFilter">
-
-                    <option value="todos">
-                        Todas las marcas
-                    </option>
-
-                </select>
+                <button type="button" id="filtersToggle" class="filters-toggle" aria-expanded="false" aria-controls="filtersPanel">
+                    FILTROS <b id="activeFiltersCount" class="cart-count is-empty">0</b>
+                </button>
 
             </div>
 
-            <div class="price-filter-row" aria-label="Filtrar por precio">
-                <label>Precio desde <input type="number" id="minPriceFilter" min="0" step="1" placeholder="$ mínimo"></label>
-                <label>Precio hasta <input type="number" id="maxPriceFilter" min="0" step="1" placeholder="$ máximo"></label>
-                <button type="button" id="applyPriceFilter" class="apply-price-button" aria-label="Aplicar filtro de precio">🔍 BUSCAR</button>
-                <button type="button" id="clearCatalogFilters" class="clear-filters-button">LIMPIAR FILTROS</button>
+            <!-- ACCESOS RÁPIDOS POR GÉNERO -->
+            <div class="gender-pills" id="genderPills" role="group" aria-label="Filtrar por género">
+                <button type="button" data-gender="todos" class="active">TODOS</button>
+                <button type="button" data-gender="Hombre">HOMBRE</button>
+                <button type="button" data-gender="Mujer">MUJER</button>
+                <button type="button" data-gender="Unisex">UNISEX</button>
+            </div>
+
+            <!-- FILTROS AVANZADOS (se pliegan en el celular) -->
+            <div class="filters-panel" id="filtersPanel">
+
+                <div class="filters">
+
+                    <!-- TIPO DE PRODUCTO -->
+                    <select id="typeFilter" aria-label="Tipo de producto">
+                        <option value="todos">Todos los productos</option>
+                        <option value="Perfume">Perfumes</option>
+                        <option value="Otro producto">Otros productos</option>
+                    </select>
+
+                    <!-- GÉNERO (se maneja con los botones de arriba) -->
+                    <select id="genderFilter" hidden aria-hidden="true" tabindex="-1">
+                        <option value="todos">Todos</option>
+                        <option value="Hombre">Hombre</option>
+                        <option value="Mujer">Mujer</option>
+                        <option value="Unisex">Unisex</option>
+                    </select>
+
+                    <!-- TEMPORADA -->
+                    <select id="seasonFilter" aria-label="Filtrar por temporada">
+                        <option value="todos">Todas las temporadas</option>
+                        <option value="Verano">Verano</option>
+                        <option value="Otoño">Otoño</option>
+                        <option value="Invierno">Invierno</option>
+                        <option value="Primavera">Primavera</option>
+                    </select>
+
+                    <!-- MARCA -->
+                    <select id="brandFilter" aria-label="Filtrar por marca">
+                        <option value="todos">Todas las marcas</option>
+                    </select>
+
+                </div>
+
+                <div class="price-filter-row" aria-label="Filtrar por precio">
+                    <label>Precio desde <input type="number" id="minPriceFilter" min="0" step="1" placeholder="$ mínimo"></label>
+                    <label>Precio hasta <input type="number" id="maxPriceFilter" min="0" step="1" placeholder="$ máximo"></label>
+                    <button type="button" id="applyPriceFilter" class="apply-price-button" aria-label="Aplicar filtro de precio">🔍 BUSCAR</button>
+                    <button type="button" id="clearCatalogFilters" class="clear-filters-button">LIMPIAR FILTROS</button>
+                </div>
+
             </div>
 
             <div class="catalog-tools">
@@ -429,6 +451,8 @@
 
             </div>
 
+            <nav id="catalogPaginationBottom" class="catalog-pagination" aria-label="Páginas del catálogo (abajo)"></nav>
+
         </section>
 
 
@@ -482,6 +506,24 @@
         </section>
 
 
+
+        <!-- ============================================
+             CÓMO COMPRAR
+             Los datos de horarios, pagos y entregas se editan en script.js (STORE_INFO).
+             ============================================ -->
+
+        <section class="howto" id="como-comprar">
+            <div class="section-title">
+                <p>ES MUY FÁCIL</p>
+                <h2>CÓMO COMPRAR</h2>
+            </div>
+            <ol class="howto-steps">
+                <li><span>1</span><h3>Elegí tu aroma</h3><p>Explorá el catálogo y sumá tus fragancias al carrito.</p></li>
+                <li><span>2</span><h3>Pedí por WhatsApp</h3><p>Tocá “Pedir” y un vendedor recibe tu pedido con todo el detalle y el total.</p></li>
+                <li><span>3</span><h3>Coordiná pago y entrega</h3><p>Te confirmamos la disponibilidad y acordamos cómo pagar y recibir tu pedido.</p></li>
+            </ol>
+            <div class="store-info" id="storeInfo"></div>
+        </section>
 
         <!-- ============================================
              NOSOTROS
@@ -613,6 +655,14 @@
         </section>
 </main>
 
+    <!-- ============================================
+         CARRITO FLOTANTE
+         ============================================ -->
+    <button class="floating-cart" id="floatingCart" type="button" aria-label="Abrir carrito" title="Tu carrito">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM1 2v2h2l3.6 7.6-1.4 2.4A2 2 0 0 0 7 17h12v-2H7.4l1.1-2h7.5a2 2 0 0 0 1.7-1l3.6-6.5A1 1 0 0 0 20.4 4H5.2l-.9-2H1Z"/></svg>
+        <b class="cart-count" data-cart-count>0</b>
+    </button>
+
     <button class="floating-whatsapp" id="floatingWhatsapp" type="button" aria-label="Contactar por WhatsApp" title="Contactanos por WhatsApp">
         <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 .8A15 15 0 0 0 3.1 23.5L1 31l7.7-2A15.1 15.1 0 1 0 16 .8Zm0 27.4a12.3 12.3 0 0 1-6.3-1.7l-.5-.3-4.6 1.2 1.2-4.5-.3-.5A12.3 12.3 0 1 1 16 28.2Zm6.8-9.2c-.4-.2-2.1-1-2.4-1.1-.3-.1-.6-.2-.8.2-.2.4-.9 1.1-1.1 1.3-.2.2-.4.3-.8.1-.4-.2-1.5-.6-2.9-1.8-1.1-1-1.8-2.1-2-2.5-.2-.4 0-.6.2-.8l.5-.6c.2-.2.2-.4.4-.6.1-.2 0-.5 0-.6-.1-.2-.8-1.9-1.1-2.6-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.4-1.2 1.2-1.2 2.9s1.2 3.3 1.4 3.5c.2.2 2.4 3.7 5.9 5.2.8.3 1.4.5 1.9.6.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.5.2-1.7-.1-.2-.3-.3-.7-.5Z"/></svg>
     </button>
@@ -708,6 +758,53 @@
 
 
     <!-- ============================================
+         CARRITO (PANEL LATERAL)
+         ============================================ -->
+
+    <div id="cartOverlay" class="cart-overlay"></div>
+
+    <aside
+        id="cartDrawer"
+        class="cart-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cartTitle"
+        aria-hidden="true"
+    >
+        <div class="cart-head">
+            <div>
+                <span class="cart-eyebrow">ELIXIR HOUSE</span>
+                <h2 id="cartTitle">TU CARRITO</h2>
+            </div>
+            <button type="button" id="closeCart" class="cart-close" aria-label="Cerrar carrito">✕</button>
+        </div>
+
+        <div class="cart-body" id="cartBody"></div>
+
+        <div class="cart-footer" id="cartFooter">
+            <details class="cart-customer" id="cartCustomer">
+                <summary>＋ Agregar nombre o comentarios <span>(opcional)</span></summary>
+                <label for="cartName">Tu nombre</label>
+                <input type="text" id="cartName" maxlength="60" placeholder="Para que te atiendan por tu nombre" autocomplete="name">
+                <label for="cartNote">Comentarios</label>
+                <textarea id="cartNote" rows="2" maxlength="300" placeholder="Ej: es para regalo, ¿pueden envolverlo?"></textarea>
+            </details>
+
+            <div class="cart-summary">
+                <div class="cart-summary-row"><span>Productos</span><span id="cartUnits">0</span></div>
+                <div class="cart-summary-row cart-savings" id="cartSavingsRow" hidden><span>Ahorrás con promociones</span><span id="cartSavings">$ 0</span></div>
+                <div class="cart-summary-row cart-total"><span>TOTAL</span><strong id="cartTotal">$ 0</strong></div>
+            </div>
+
+            <button type="button" id="cartCheckout" class="cart-checkout">PEDIR POR WHATSAPP</button>
+            <button type="button" id="cartClear" class="cart-clear">Vaciar carrito</button>
+            <p class="cart-note">Al tocar “Pedir” te llevamos a WhatsApp con el detalle de tu pedido. Un vendedor te confirmará disponibilidad y forma de pago: el pedido no es una compra confirmada hasta ese momento.</p>
+        </div>
+    </aside>
+
+    <div id="cartToast" class="cart-toast" role="status" aria-live="polite"></div>
+
+    <!-- ============================================
          SELECTOR DE VENDEDOR
          ============================================ -->
 
@@ -764,7 +861,7 @@
 
 <script src="supabase.js?v=tienda-premium-20261010"></script>
 
-<script src="script.js?v=tienda-premium-20261010"></script>
+<script src="script.js?v=mejoras-20261101"></script>
 <script>
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

@@ -115,12 +115,25 @@
             </div>
 
 
-            <button
-                id="logoutButton"
-                class="logout-button"
-            >
-                CERRAR SESIÓN
-            </button>
+            <div class="admin-header-actions">
+
+                <button
+                    type="button"
+                    id="pendingChip"
+                    class="pending-chip is-empty"
+                    title="Ver solicitudes pendientes"
+                >
+                    🔔 <span id="pendingChipText"></span>
+                </button>
+
+                <button
+                    id="logoutButton"
+                    class="logout-button"
+                >
+                    CERRAR SESIÓN
+                </button>
+
+            </div>
 
         </header>
 
@@ -130,10 +143,17 @@
 
         <main class="admin-container">
 
+            <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="Secciones del panel">
+                <button type="button" role="tab" data-tab-target="productos" class="active" aria-selected="true">PRODUCTOS</button>
+                <button type="button" role="tab" data-tab-target="solicitudes" aria-selected="false">SOLICITUDES <b id="pendingBadge" class="tab-badge is-empty">0</b></button>
+                <button type="button" role="tab" data-tab-target="ventas" aria-selected="false">VENTAS</button>
+                <button type="button" role="tab" data-tab-target="marcas" aria-selected="false">MARCAS</button>
+            </nav>
+
 
             <!-- ESTADÍSTICAS -->
 
-            <section class="stats">
+            <section class="stats" data-tab="productos">
 
                 <div class="stat-card">
 
@@ -175,7 +195,7 @@
 
             </section>
 
-            <section class="stats stats-extra">
+            <section class="stats stats-extra" data-tab="productos">
                 <div class="stat-card"><span>MARCA</span><strong id="totalBrands">0</strong></div>
                 <div class="stat-card"><span>CATEGORÍAS</span><strong id="totalCategories">0</strong></div>
                 
@@ -187,7 +207,7 @@
                  VENDEDORES
             ====================================== -->
 
-            <section class="seller-stats-section">
+            <section class="seller-stats-section" data-tab="ventas">
 
                 <div class="section-title seller-section-heading">
                     <div>
@@ -219,7 +239,7 @@
 
             <!-- ACCIONES -->
 
-            <section class="admin-actions">
+            <section class="admin-actions" data-tab="productos">
 
                 <button
                     id="showAddPerfume"
@@ -237,6 +257,7 @@
             <section
                 id="perfumeFormSection"
                 class="form-section hidden"
+                data-tab="productos"
             >
 
                 <div class="section-title">
@@ -478,6 +499,14 @@
 
 
 
+                    <div class="form-group full-width hidden" id="stockQtyField">
+                        <label for="perfumeStockQty">Unidades disponibles <span class="optional-label">(opcional)</span></label>
+                        <input type="number" id="perfumeStockQty" min="0" step="1" placeholder="Ej: 6">
+                        <small class="management-help">Dejalo vacío si no querés llevar la cuenta. Con un número, la web avisa cuando quedan pocas, no deja pedir de más y el panel descuenta una unidad cada vez que confirmás una compra. Si ponés 0, el producto queda sin stock.</small>
+                    </div>
+
+                    <p class="management-help full-width hidden" id="stockQtyHint">Tip: para llevar el stock por unidades, ejecutá el SQL opcional incluido en el paquete (SQL_OPCIONAL_Elixir_House.sql en Supabase).</p>
+
                     <div class="form-group full-width admin-promo-box">
                         <h3>DESTACAR Y PROMOCIONAR</h3>
                         <div class="checkbox-container">
@@ -517,7 +546,7 @@
                  MARCAS Y CATEGORÍAS
             ====================================== -->
 
-            <section class="management-section">
+            <section class="management-section" data-tab="marcas">
 
                 <div class="management-grid">
 
@@ -585,7 +614,7 @@
 
             <!-- LISTADO -->
 
-            <section class="products-section">
+            <section class="products-section" data-tab="productos">
 
                 <div class="section-title">
 
@@ -607,27 +636,30 @@
                     class="admin-products"
                 ></div>
 
+                <nav
+                    id="adminPagination"
+                    class="admin-pagination"
+                    aria-label="Páginas de productos"
+                ></nav>
+
             </section>
 
 
 
-            <section class="admin-tools-panel">
-                <div class="section-title"><div><span class="seller-section-label">CONTROL DEL CATÁLOGO</span><h2>ALERTAS Y EXPORTACIÓN</h2></div></div>
-                <div id="lowStockAlert" class="low-stock-alert">Revisando disponibilidad…</div>
-                <div class="export-actions">
-                    <button type="button" id="exportCatalogCSV" class="secondary-button">EXPORTAR CATÁLOGO CSV</button>
-                    <button type="button" id="exportSalesCSV" class="secondary-button">EXPORTAR VENTAS CSV</button>
-                </div>
-                <p class="management-help">La alerta detecta productos marcados como “sin stock”. Para alertas por cantidad mínima real, el catálogo necesitaría un campo numérico de unidades.</p>
+            
+
+            
+
+            
+
+            <section class="admin-tools-panel" id="purchaseRequestsPanel" data-tab="solicitudes">
+                <div class="section-title"><div><span class="seller-section-label">CONTROL DE SOLICITUDES</span><h2>SOLICITUDES DE COMPRA</h2></div><button type="button" id="refreshPurchaseRequests" class="secondary-button">ACTUALIZAR</button></div>
+                <p class="management-help">Cada solicitud queda guardada al tocar el botón de WhatsApp. Las solicitudes pendientes no suman ventas ni puntos. Confirmá solo cuando la compra se concrete; las cancelaciones quedan registradas.</p>
+                <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Código</th><th>Fecha de solicitud</th><th>Vendedor asignado</th><th>Producto</th><th>Precio solicitado</th><th>Estado / acciones</th></tr></thead><tbody id="purchaseRequestsBody"><tr><td colspan="6">Cargando solicitudes…</td></tr></tbody></table></div>
+                <p id="purchaseRequestsMessage" class="management-help" role="status"></p>
             </section>
 
-            <section class="admin-tools-panel">
-                <div class="section-title"><div><span class="seller-section-label">AUDITORÍA LOCAL</span><h2>HISTORIAL DE CAMBIOS</h2></div><button type="button" id="refreshChangeHistory" class="secondary-button">ACTUALIZAR</button></div>
-                <p class="management-help">Se registran los cambios de precio y disponibilidad realizados desde este navegador. Este historial local no sustituye un registro central en Supabase.</p>
-                <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Fecha</th><th>Producto</th><th>Cambios</th></tr></thead><tbody id="changeHistoryBody"><tr><td colspan="3">Cargando…</td></tr></tbody></table></div>
-            </section>
-
-            <section class="admin-tools-panel" id="registerSalePanel">
+            <section class="admin-tools-panel" id="registerSalePanel" data-tab="solicitudes">
                 <div class="section-title"><div><span class="seller-section-label">VENTA REALIZADA</span><h2>CONFIRMAR COMPRA</h2></div></div>
                 <p class="management-help">Usá este formulario solamente cuando el cliente confirmó la compra y la operación se concretó. Tocar “Solicitar por WhatsApp” en el catálogo ya no genera una venta.</p>
                 <form id="confirmedSaleForm" class="confirmed-sale-form">
@@ -639,14 +671,7 @@
                 <p id="confirmedSaleMessage" class="management-help" role="status"></p>
             </section>
 
-            <section class="admin-tools-panel" id="purchaseRequestsPanel">
-                <div class="section-title"><div><span class="seller-section-label">CONTROL DE SOLICITUDES</span><h2>SOLICITUDES DE COMPRA</h2></div><button type="button" id="refreshPurchaseRequests" class="secondary-button">ACTUALIZAR</button></div>
-                <p class="management-help">Cada solicitud queda guardada al tocar el botón de WhatsApp. Las solicitudes pendientes no suman ventas ni puntos. Confirmá solo cuando la compra se concrete; las cancelaciones quedan registradas.</p>
-                <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Código</th><th>Fecha de solicitud</th><th>Vendedor asignado</th><th>Producto</th><th>Precio solicitado</th><th>Estado / acciones</th></tr></thead><tbody id="purchaseRequestsBody"><tr><td colspan="6">Cargando solicitudes…</td></tr></tbody></table></div>
-                <p id="purchaseRequestsMessage" class="management-help" role="status"></p>
-            </section>
-
-            <section class="admin-tools-panel" id="salesHistoryPanel">
+            <section class="admin-tools-panel" id="salesHistoryPanel" data-tab="ventas">
                 <div class="section-title"><div><span class="seller-section-label">REGISTROS</span><h2>HISTORIAL DE VENTAS</h2></div><button type="button" id="refreshSales" class="secondary-button">ACTUALIZAR VENTAS</button></div>
                 <div class="history-filters"><label>Desde<input type="date" id="salesDateFrom"></label><label>Hasta<input type="date" id="salesDateTo"></label><label>Vendedor<select id="salesSellerFilter"><option value="todos">Todos los vendedores</option></select></label><button type="button" id="clearSalesFilters" class="secondary-button">LIMPIAR</button></div>
                 <div class="history-table-wrap"><table class="history-table"><thead><tr><th>Fecha</th><th>Vendedor</th><th>Producto</th><th>Precio</th></tr></thead><tbody id="salesHistoryBody"><tr><td colspan="4">Cargando ventas…</td></tr></tbody></table></div>

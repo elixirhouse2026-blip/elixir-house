@@ -16,6 +16,18 @@ const DEFAULT_SELLERS = [
     { nombre: "Ramiro", telefono: "5493516566067", id: null }
 ];
 
+// ============================================
+// DATOS DE LA TIENDA (editá estos textos)
+// Lo que dejes vacío ("") no se muestra en la web.
+// ============================================
+const STORE_INFO = {
+    horarios: "Lunes a sábado",
+    pagos: "",      // Ej: "Efectivo, transferencia y Mercado Pago"
+    entregas: ""    // Ej: "Envíos y retiro en persona"
+};
+
+const LOW_STOCK_LIMIT = 3;   // desde cuántas unidades se muestra "¡Últimas unidades!"
+
 const SELLER_FALLBACK_MESSAGE = "Hola Elixir House! 👋\n\nQuisiera hacer una consulta.";
 
 const productsGrid = document.getElementById("productsGrid");
@@ -110,15 +122,29 @@ function renderRecentlyViewed() {
     items.forEach(perfume => recentGrid.appendChild(createProductCard(perfume, true)));
 }
 
+function productLink(perfume) {
+    return location.href.split("#")[0] + "#perfume-" + encodeURIComponent(perfume.id);
+}
+
 function sharePerfume(perfume) {
-    const text = `Elixir House — ${perfume.nombre}\n${formatPrice(perfume.precio)}\n${perfume.marca || ""}`;
+    const link = productLink(perfume);
+    const text = `Elixir House — ${perfume.nombre}\n${formatPrice(effectivePrice(perfume))}\n${perfume.marca || ""}`.trim();
     if (navigator.share) {
-        navigator.share({ title: perfume.nombre, text }).catch(() => {});
+        navigator.share({ title: perfume.nombre, text, url: link }).catch(() => {});
     } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => alert("Datos del perfume copiados para compartir."));
+        navigator.clipboard.writeText(text + "\n" + link).then(() => showCartToast("Link del perfume copiado para compartir."));
     } else {
-        alert(text);
+        alert(text + "\n" + link);
     }
+}
+
+function stockStatus(perfume) {
+    if (!perfume.stock) return { cls: "unavailable", text: "● SIN STOCK" };
+    const qty = perfume.stock_cantidad;
+    if (qty !== null && qty !== undefined && qty <= LOW_STOCK_LIMIT) {
+        return { cls: "available low", text: qty === 1 ? "● ¡ÚLTIMA UNIDAD!" : `● ¡ÚLTIMAS ${qty} UNIDADES!` };
+    }
+    return { cls: "available", text: "● DISPONIBLE" };
 }
 
 function updateFavoritesUI() {
@@ -140,21 +166,29 @@ function toggleFavorite(id) {
     renderProducts(filteredPerfumes);
 }
 
+async function fetchPerfumeRows() {
+    const base = `
+        id, nombre, tipo_producto, genero, precio, descripcion, acordes, imagen, stock, premium, temporadas,
+        marca_id, categoria_id, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
+        marcas (id, nombre),
+        categorias (id, nombre, genero)
+    `;
+    // La columna stock_cantidad es opcional: si todavía no existe en Supabase, se consulta sin ella.
+    let result = await supabaseClient.from("perfumes").select(base + ", stock_cantidad").order("id", { ascending: false });
+    if (result.error) result = await supabaseClient.from("perfumes").select(base).order("id", { ascending: false });
+    return result;
+}
+
 async function loadPerfumes() {
     try {
-        const result = await supabaseClient
-            .from("perfumes")
-            .select(`
-                id, nombre, tipo_producto, genero, precio, descripcion, acordes, imagen, stock, premium, temporadas,
-                marca_id, categoria_id, destacado, promocion_activa, descuento_porcentaje, promocion_inicio, promocion_fin,
-                marcas (id, nombre),
-                categorias (id, nombre, genero)
-            `)
-            .order("id", { ascending: false });
+        const result = await fetchPerfumeRows();
 
         if (result.error) throw result.error;
 
         perfumes = (result.data || []).map(function (p) {
+            const qtyRaw = p.stock_cantidad;
+            const qty = (qtyRaw === null || qtyRaw === undefined || qtyRaw === "" || !Number.isFinite(Number(qtyRaw)))
+                ? null : Math.max(0, Math.floor(Number(qtyRaw)));
             return {
                 id: p.id,
                 nombre: p.nombre || "Sin nombre",
@@ -169,7 +203,8 @@ async function loadPerfumes() {
                 descripcion: p.descripcion || "",
                 acordes: Array.isArray(p.acordes) ? p.acordes : [],
                 imagen: p.imagen || "",
-                stock: p.stock === true,
+                stock_cantidad: qty,
+                stock: p.stock === true && (qty === null || qty > 0),
                 premium: p.premium === true,
                 destacado: p.destacado === true,
                 promocion_activa: p.promocion_activa === true || p.promocion_activa === "true" || p.promocion_activa === 1 || p.promocion_activa === "1",
@@ -179,11 +214,16 @@ async function loadPerfumes() {
             };
         });
 
+        catalogReady = true;
+        syncCartWithCatalog();
+
         buildDynamicFilters();
         // La fila de subcategorías visuales se quitó del HTML; no debe bloquear la carga del catálogo.
         if (typeof renderSubcategories === "function") renderSubcategories();
         filterProducts();
         renderFeaturedCarousel();
+        renderStoreInfo();
+        openProductFromHash();
     } catch (error) {
         console.error("Error cargando perfumes:", error);
         showConnectionError();
@@ -196,7 +236,14 @@ function showConnectionError() {
     if (premiumGrid) premiumGrid.innerHTML = "";
     const errorMessage = document.createElement("div");
     errorMessage.className = "catalog-error";
-    errorMessage.textContent = "No se pudieron cargar los perfumes. Intentá nuevamente.";
+    const errorText = document.createElement("p");
+    errorText.textContent = "No se pudieron cargar los perfumes. Revisá tu conexión e intentá nuevamente.";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "retry-button";
+    retry.textContent = "REINTENTAR";
+    retry.addEventListener("click", function () { renderSkeletons(); loadPerfumes(); });
+    errorMessage.append(errorText, retry);
     productsGrid.appendChild(errorMessage);
 }
 
@@ -225,14 +272,56 @@ function applySort(items) {
     if (mode === "name-desc") list.sort((a, b) => b.nombre.localeCompare(a.nombre, "es"));
     if (mode === "price-asc") list.sort((a, b) => a.precio - b.precio);
     if (mode === "price-desc") list.sort((a, b) => b.precio - a.precio);
-    return list;
+    // Los productos sin stock quedan siempre al final (el orden previo se mantiene dentro de cada grupo).
+    return [...list.filter(p => p.stock), ...list.filter(p => !p.stock)];
 }
 
 let catalogCurrentPage = 1;
 const CATALOG_PAGE_SIZE = 12;
 
+const filtersToggle = document.getElementById("filtersToggle");
+const filtersPanel = document.getElementById("filtersPanel");
+const genderPills = document.getElementById("genderPills");
+const activeFiltersCount = document.getElementById("activeFiltersCount");
+
+function syncGenderPills() {
+    const value = genderFilter?.value || "todos";
+    genderPills?.querySelectorAll("button").forEach(function (button) {
+        const on = button.dataset.gender === value;
+        button.classList.toggle("active", on);
+        button.setAttribute("aria-pressed", String(on));
+    });
+}
+
+function updateFiltersBadge() {
+    if (!activeFiltersCount) return;
+    let count = 0;
+    if ((typeFilter?.value || "todos") !== "todos") count++;
+    if ((seasonFilter?.value || "todos") !== "todos") count++;
+    if ((brandFilter?.value || "todos") !== "todos") count++;
+    if ((minPriceFilter?.value || "").trim() !== "") count++;
+    if ((maxPriceFilter?.value || "").trim() !== "") count++;
+    activeFiltersCount.textContent = String(count);
+    activeFiltersCount.classList.toggle("is-empty", count === 0);
+}
+
+genderPills?.addEventListener("click", function (event) {
+    const button = event.target.closest("button[data-gender]");
+    if (!button || !genderFilter) return;
+    genderFilter.value = button.dataset.gender;
+    filterProducts();
+});
+
+filtersToggle?.addEventListener("click", function () {
+    const open = filtersPanel?.classList.toggle("open");
+    filtersToggle.setAttribute("aria-expanded", String(!!open));
+    filtersToggle.classList.toggle("active", !!open);
+});
+
 function filterProducts() {
     catalogCurrentPage = 1;
+    syncGenderPills();
+    updateFiltersBadge();
     const search = searchInput?.value.toLowerCase().trim() || "";
     const gender = genderFilter?.value || "todos";
     const type = typeFilter?.value || "todos";
@@ -418,15 +507,19 @@ function createProductCard(perfume, compact = false) {
     const button = document.createElement("button");
     button.className = "request-button";
     button.type = "button";
-    button.textContent = perfume.stock ? "SOLICITAR" : "SIN STOCK";
-    button.disabled = !perfume.stock;
-    if (perfume.stock) button.addEventListener("click", () => requestPerfume(perfume));
+    button.textContent = perfume.stock ? "+ AGREGAR" : "AVISARME";
+    if (!perfume.stock) {
+        button.classList.add("notify-button");
+        button.title = "Te avisamos por WhatsApp cuando vuelva a haber stock";
+    }
+    button.addEventListener("click", () => perfume.stock ? addToCart(perfume) : notifyRestock(perfume));
 
     bottom.append(button);
 
     const stock = document.createElement("div");
-    stock.className = perfume.stock ? "stock available" : "stock unavailable";
-    stock.textContent = perfume.stock ? "● DISPONIBLE" : "● SIN STOCK";
+    const status = stockStatus(perfume);
+    stock.className = "stock " + status.cls;
+    stock.textContent = status.text;
 
     info.append(gender, brand, name, description, bottom, stock);
     article.append(imageContainer, info);
@@ -462,22 +555,24 @@ function renderProducts(products) {
 }
 
 function renderCatalogPagination(totalItems, totalPages) {
-    const nav = document.getElementById("catalogPagination");
-    if (!nav) return;
-    nav.innerHTML = "";
-    if (totalItems <= CATALOG_PAGE_SIZE) return;
-    const previous = document.createElement("button");
-    previous.type = "button"; previous.textContent = "‹ Anterior"; previous.disabled = catalogCurrentPage === 1;
-    previous.addEventListener("click", () => changeCatalogPage(catalogCurrentPage - 1)); nav.appendChild(previous);
-    for (let page = 1; page <= totalPages; page++) {
-        const button = document.createElement("button"); button.type = "button"; button.textContent = String(page);
-        button.classList.toggle("active", page === catalogCurrentPage); button.setAttribute("aria-label", `Página ${page}`);
-        button.addEventListener("click", () => changeCatalogPage(page)); nav.appendChild(button);
-    }
-    const next = document.createElement("button");
-    next.type = "button"; next.textContent = "Siguiente ›"; next.disabled = catalogCurrentPage === totalPages;
-    next.addEventListener("click", () => changeCatalogPage(catalogCurrentPage + 1)); nav.appendChild(next);
-    const label = document.createElement("span"); label.className = "page-label"; label.textContent = `Página ${catalogCurrentPage} de ${totalPages}`; nav.appendChild(label);
+    ["catalogPagination", "catalogPaginationBottom"].forEach(function (id) {
+        const nav = document.getElementById(id);
+        if (!nav) return;
+        nav.innerHTML = "";
+        if (totalItems <= CATALOG_PAGE_SIZE) return;
+        const previous = document.createElement("button");
+        previous.type = "button"; previous.textContent = "‹ Anterior"; previous.disabled = catalogCurrentPage === 1;
+        previous.addEventListener("click", () => changeCatalogPage(catalogCurrentPage - 1)); nav.appendChild(previous);
+        for (let page = 1; page <= totalPages; page++) {
+            const button = document.createElement("button"); button.type = "button"; button.textContent = String(page);
+            button.classList.toggle("active", page === catalogCurrentPage); button.setAttribute("aria-label", `Página ${page}`);
+            button.addEventListener("click", () => changeCatalogPage(page)); nav.appendChild(button);
+        }
+        const next = document.createElement("button");
+        next.type = "button"; next.textContent = "Siguiente ›"; next.disabled = catalogCurrentPage === totalPages;
+        next.addEventListener("click", () => changeCatalogPage(catalogCurrentPage + 1)); nav.appendChild(next);
+        const label = document.createElement("span"); label.className = "page-label"; label.textContent = `Página ${catalogCurrentPage} de ${totalPages}`; nav.appendChild(label);
+    });
 }
 
 function changeCatalogPage(page) {
@@ -512,11 +607,28 @@ function buildPerfumeMessage(perfume) {
     return message;
 }
 
-async function openSellerModal(perfume, countSale) {
+function buildRestockMessage(perfume) {
+    let message = "Hola Elixir House! 👋\n\nMe interesa este producto que figura sin stock:\n\n✨ " + perfume.nombre;
+    if (perfume.marca && perfume.marca !== "Sin marca") message += "\n🏷️ Marca: " + perfume.marca;
+    message += "\n\n¿Me pueden avisar cuando vuelva a estar disponible?";
+    return message;
+}
+
+function notifyRestock(perfume) {
+    openSellerModal(perfume, false, null, { restock: true });
+}
+
+async function openSellerModal(perfume, countSale, order = null, options = {}) {
     if (!sellerModal || !sellerOptions) return;
     if (!vendedores.length) await loadVendedores();
 
-    pendingWhatsAppRequest = { perfume: perfume || null, countSale: countSale === true };
+    const titleEl = document.getElementById("sellerModalTitle");
+    const textEl = document.getElementById("sellerModalText");
+    if (!openSellerModal.defaults) openSellerModal.defaults = { title: titleEl?.textContent || "", text: textEl?.textContent || "" };
+    if (titleEl) titleEl.textContent = options.restock ? "¿Con quién querés hablar?" : openSellerModal.defaults.title;
+    if (textEl) textEl.textContent = options.restock ? "Elegí un vendedor y te avisamos cuando vuelva a haber stock." : openSellerModal.defaults.text;
+
+    pendingWhatsAppRequest = { perfume: perfume || null, countSale: countSale === true, order: order || null, restock: options.restock === true };
     sellerOptions.innerHTML = "";
 
     vendedores.forEach(function (seller) {
@@ -529,22 +641,52 @@ async function openSellerModal(perfume, countSale) {
         `;
         button.addEventListener("click", async function () {
             const request = pendingWhatsAppRequest;
+            const order = request?.order || null;
             const selectedPerfume = request?.perfume || null;
-            const message = selectedPerfume ? buildPerfumeMessage(selectedPerfume) : SELLER_FALLBACK_MESSAGE;
+
+            // Aviso de stock: es solo una consulta, no se registra como solicitud de compra.
+            if (request?.restock && selectedPerfume) {
+                const restockMessage = buildRestockMessage(selectedPerfume);
+                closeSellerChooser();
+                window.location.href = "https://wa.me/" + String(seller.telefono).replace(/\D/g, "") + "?text=" + encodeURIComponent(restockMessage);
+                return;
+            }
+
+            const message = order
+                ? buildOrderMessage(order)
+                : (selectedPerfume ? buildPerfumeMessage(selectedPerfume) : SELLER_FALLBACK_MESSAGE);
             button.disabled = true;
             button.querySelector(".seller-option-name").textContent = "Registrando solicitud…";
 
             // Guardar la solicitud antes de abrir WhatsApp. No es una venta todavía.
-            const currentPrice = selectedPerfume ? effectivePrice(selectedPerfume) : null;
-            const requestResult = await supabaseClient.from("solicitudes_compra").insert({
-                vendedor_id: seller.id,
-                perfume_id: selectedPerfume?.id || null,
-                producto_nombre: selectedPerfume?.nombre || "Consulta general",
-                precio_solicitado: currentPrice,
-                estado: "pendiente"
-            }).select("id").single();
+            // Un pedido de carrito guarda una solicitud por unidad, así cada una se confirma por separado.
+            let rows;
+            if (order) {
+                rows = [];
+                order.lines.forEach(function (line) {
+                    for (let i = 0; i < line.qty; i++) {
+                        rows.push({
+                            vendedor_id: seller.id,
+                            perfume_id: line.perfume.id,
+                            producto_nombre: line.perfume.nombre,
+                            precio_solicitado: line.unit,
+                            estado: "pendiente"
+                        });
+                    }
+                });
+            } else {
+                rows = [{
+                    vendedor_id: seller.id,
+                    perfume_id: selectedPerfume?.id || null,
+                    producto_nombre: selectedPerfume?.nombre || "Consulta general",
+                    precio_solicitado: selectedPerfume ? effectivePrice(selectedPerfume) : null,
+                    estado: "pendiente"
+                }];
+            }
 
-            if (requestResult.error) {
+            const requestResult = await supabaseClient.from("solicitudes_compra").insert(rows).select("id");
+
+            if (requestResult.error || !requestResult.data?.length) {
                 console.error("No se pudo guardar la solicitud:", requestResult.error);
                 button.disabled = false;
                 button.querySelector(".seller-option-name").textContent = seller.nombre || "Vendedor";
@@ -552,8 +694,12 @@ async function openSellerModal(perfume, countSale) {
                 return;
             }
 
-            const requestCode = requestResult.data?.id ? String(requestResult.data.id).slice(0, 8).toUpperCase() : "registrada";
-            const trackedMessage = message + "\n\n📋 Solicitud registrada en Elixir House: " + requestCode + "\n(La solicitud no significa que la compra esté confirmada.)";
+            const requestCode = requestResult.data[0]?.id ? String(requestResult.data[0].id).slice(0, 8).toUpperCase() : "registrada";
+            const registeredLine = (order && requestResult.data.length > 1)
+                ? "📋 Pedido registrado en Elixir House: " + requestCode + " (" + requestResult.data.length + " productos)"
+                : "📋 Solicitud registrada en Elixir House: " + requestCode;
+            const trackedMessage = message + "\n\n" + registeredLine + "\n(La solicitud no significa que la compra esté confirmada.)";
+            if (order) clearCart();
             closeSellerChooser();
             window.location.href = "https://wa.me/" + String(seller.telefono).replace(/\D/g, "") + "?text=" + encodeURIComponent(trackedMessage);
         });
@@ -565,12 +711,17 @@ async function openSellerModal(perfume, countSale) {
     document.body.classList.add("modal-open");
 }
 
+function syncBodyLock() {
+    const anyOpen = [sellerModal, productModal].some(m => m && !m.classList.contains("hidden")) || isCartOpen();
+    document.body.classList.toggle("modal-open", anyOpen);
+}
+
 function closeSellerChooser() {
     if (!sellerModal) return;
     sellerModal.classList.add("hidden");
     sellerModal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-open");
     pendingWhatsAppRequest = null;
+    syncBodyLock();
 }
 
 function openProductModal(perfume) {
@@ -600,9 +751,9 @@ function openProductModal(perfume) {
             <p class="product-modal-description">${escapeHTML(perfume.descripcion || "Sin descripción disponible.")}</p>
             ${(perfume.acordes && perfume.acordes.length) ? `<div class="product-modal-accords"><strong>Acordes</strong><div>${perfume.acordes.map(acorde => `<span>${escapeHTML(acorde)}</span>`).join("")}</div></div>` : ""}
             <div class="product-modal-price">${promoIsActive(perfume) ? `<del>${formatPrice(perfume.precio)}</del> <strong>${formatPrice(effectivePrice(perfume))}</strong> <span class="modal-promo-badge">${perfume.descuento_porcentaje}% OFF</span>` : formatPrice(perfume.precio)}</div>
-            <div class="product-modal-stock ${perfume.stock ? "available" : "unavailable"}">${perfume.stock ? "● DISPONIBLE" : "● SIN STOCK"}</div>
-            <button type="button" class="product-modal-request" ${perfume.stock ? "" : "disabled"}>
-                ${perfume.stock ? "SOLICITAR POR WHATSAPP" : "SIN STOCK"}
+            <div class="product-modal-stock ${stockStatus(perfume).cls}">${stockStatus(perfume).text}</div>
+            <button type="button" class="product-modal-request${perfume.stock ? "" : " notify"}">
+                ${perfume.stock ? "AGREGAR AL CARRITO" : "AVISARME CUANDO HAYA STOCK"}
             </button>
         </div>
     `;
@@ -619,8 +770,14 @@ function openProductModal(perfume) {
     const request = productModalContent.querySelector(".product-modal-request");
     request?.addEventListener("click", function () {
         closeProductModalChooser();
-        requestPerfume(perfume);
+        if (perfume.stock) addToCart(perfume);
+        else notifyRestock(perfume);
     });
+
+    try {
+        const hash = "#perfume-" + encodeURIComponent(perfume.id);
+        if (location.hash !== hash) history.replaceState(null, "", hash);
+    } catch (error) { /* sin historial disponible */ }
 
     productModal.classList.remove("hidden");
     productModal.setAttribute("aria-hidden", "false");
@@ -631,8 +788,26 @@ function closeProductModalChooser() {
     if (!productModal) return;
     productModal.classList.add("hidden");
     productModal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-open");
+    try {
+        if (/^#perfume-/.test(location.hash)) history.replaceState(null, "", location.href.split("#")[0]);
+    } catch (error) { /* sin historial disponible */ }
+    syncBodyLock();
 }
+
+// Abre el perfume indicado en el link (…#perfume-12) cuando el catálogo ya cargó.
+function openProductFromHash() {
+    const match = /^#perfume-(.+)$/.exec(location.hash || "");
+    if (!match) return;
+    let wanted = match[1];
+    try { wanted = decodeURIComponent(wanted); } catch (error) { /* se usa tal cual */ }
+    const perfume = perfumes.find(p => String(p.id) === wanted);
+    if (perfume) openProductModal(perfume);
+}
+
+window.addEventListener("hashchange", function () {
+    if (/^#perfume-/.test(location.hash)) openProductFromHash();
+    else if (productModal && !productModal.classList.contains("hidden")) closeProductModalChooser();
+});
 
 function requestPerfume(perfume) {
     openSellerModal(perfume, true);
@@ -657,6 +832,7 @@ function closeOnEscape(event) {
     if (event.key !== "Escape") return;
     if (sellerModal && !sellerModal.classList.contains("hidden")) closeSellerChooser();
     else if (productModal && !productModal.classList.contains("hidden")) closeProductModalChooser();
+    else if (isCartOpen()) closeCart();
 }
 
 closeProductModal?.addEventListener("click", closeProductModalChooser);
@@ -739,6 +915,413 @@ if (menuBtn && nav) {
     nav.querySelectorAll("a").forEach(link => link.addEventListener("click", () => nav.classList.remove("active")));
 }
 
+
+// ============================================
+// CARRITO DE COMPRAS
+// ============================================
+// El carrito guarda solo { id, qty } en el navegador. Nombre, stock y precio se leen
+// siempre del catálogo actual, así nunca se muestra un precio vencido.
+
+const CART_KEY = "elixirCart";
+const CART_CUSTOMER_KEY = "elixirCartCustomer";
+const MAX_CART_QTY = 10;     // unidades máximas por producto
+const MAX_CART_UNITS = 30;   // unidades máximas por pedido
+
+const cartDrawer = document.getElementById("cartDrawer");
+const cartOverlay = document.getElementById("cartOverlay");
+const cartBody = document.getElementById("cartBody");
+const cartFooter = document.getElementById("cartFooter");
+const cartToast = document.getElementById("cartToast");
+const cartNameInput = document.getElementById("cartName");
+const cartNoteInput = document.getElementById("cartNote");
+const cartCheckoutButton = document.getElementById("cartCheckout");
+
+let catalogReady = false;
+let cart = loadCartFromStorage();
+let cartLastFocus = null;
+let cartToastTimer = null;
+
+function loadCartFromStorage() {
+    try {
+        const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+        if (!Array.isArray(raw)) return [];
+        const seen = new Set();
+        const clean = [];
+        raw.forEach(function (item) {
+            const id = String(item?.id ?? "");
+            const qty = Math.floor(Number(item?.qty));
+            if (!id || seen.has(id) || !(qty > 0)) return;
+            seen.add(id);
+            clean.push({ id: id, qty: Math.min(qty, MAX_CART_QTY) });
+        });
+        return clean;
+    } catch (error) {
+        return [];
+    }
+}
+
+function saveCart() {
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (error) { /* sin almacenamiento */ }
+    renderCart();
+}
+
+function cartUnits() {
+    return cart.reduce((sum, item) => sum + item.qty, 0);
+}
+
+function isCartOpen() {
+    return !!cartDrawer && cartDrawer.classList.contains("open");
+}
+
+function getCartLines() {
+    return cart.map(function (item) {
+        const perfume = perfumes.find(p => String(p.id) === item.id);
+        if (!perfume) return null;
+        return {
+            id: item.id,
+            perfume: perfume,
+            qty: item.qty,
+            unit: effectivePrice(perfume),
+            list: Number(perfume.precio) || 0,
+            available: perfume.stock === true
+        };
+    }).filter(Boolean);
+}
+
+function cartTotals(lines) {
+    const buyable = lines.filter(l => l.available);
+    return {
+        units: buyable.reduce((sum, l) => sum + l.qty, 0),
+        total: buyable.reduce((sum, l) => sum + l.unit * l.qty, 0),
+        savings: buyable.reduce((sum, l) => sum + Math.max(0, l.list - l.unit) * l.qty, 0)
+    };
+}
+
+function syncCartWithCatalog() {
+    if (!catalogReady || !cart.length) { renderCart(); return; }
+    const before = cart.length;
+    cart = cart.filter(item => perfumes.some(p => String(p.id) === item.id));
+    if (cart.length !== before) showCartToast("Algunos productos ya no están en el catálogo y se quitaron de tu carrito.");
+    let adjusted = false;
+    cart.forEach(function (item) {
+        const p = perfumes.find(x => String(x.id) === item.id);
+        if (!p || !p.stock) return;
+        const limit = cartLimitFor(p);
+        if (item.qty > limit) { item.qty = limit; adjusted = true; }
+    });
+    if (adjusted) showCartToast("Ajustamos algunas cantidades según el stock disponible.");
+    saveCart();
+}
+
+function cartLimitFor(perfume) {
+    const qty = perfume?.stock_cantidad;
+    return (qty === null || qty === undefined) ? MAX_CART_QTY : Math.max(0, Math.min(MAX_CART_QTY, qty));
+}
+
+function addToCart(perfume, qty = 1) {
+    if (!perfume || perfume.stock !== true) return;
+    const id = String(perfume.id);
+    const existing = cart.find(item => item.id === id);
+
+    if (cartUnits() + qty > MAX_CART_UNITS) {
+        showCartToast(`Podés pedir hasta ${MAX_CART_UNITS} productos por vez. Para más, escribinos por WhatsApp.`, true);
+        return;
+    }
+    const limit = cartLimitFor(perfume);
+    if (existing && existing.qty + qty > limit) {
+        showCartToast(limit < MAX_CART_QTY
+            ? `Solo quedan ${limit} unidad${limit === 1 ? "" : "es"} de ${perfume.nombre}.`
+            : `Máximo ${MAX_CART_QTY} unidades de ${perfume.nombre} por pedido.`, true);
+        return;
+    }
+
+    if (existing) existing.qty += qty;
+    else cart.push({ id: id, qty: qty });
+    saveCart();
+    bumpCartBadges();
+    showCartToast(`✓ ${perfume.nombre} agregado al carrito`, true);
+}
+
+function setCartQty(id, qty) {
+    const item = cart.find(i => i.id === String(id));
+    if (!item) return;
+    if (qty <= 0) return removeFromCart(id);
+    const others = cartUnits() - item.qty;
+    const perfume = perfumes.find(p => String(p.id) === item.id);
+    const limit = perfume ? cartLimitFor(perfume) : MAX_CART_QTY;
+    if (qty > limit) {
+        showCartToast(limit < MAX_CART_QTY ? `Solo quedan ${limit} unidad${limit === 1 ? "" : "es"} disponibles.` : `Máximo ${MAX_CART_QTY} unidades por producto.`);
+        return;
+    }
+    if (others + qty > MAX_CART_UNITS) { showCartToast(`Podés pedir hasta ${MAX_CART_UNITS} productos por vez.`); return; }
+    item.qty = qty;
+    saveCart();
+}
+
+function removeFromCart(id) {
+    cart = cart.filter(item => item.id !== String(id));
+    saveCart();
+}
+
+function clearCart() {
+    cart = [];
+    saveCart();
+}
+
+function bumpCartBadges() {
+    document.querySelectorAll(".header-cart, .floating-cart").forEach(function (el) {
+        el.classList.remove("bump");
+        void el.offsetWidth;
+        el.classList.add("bump");
+    });
+}
+
+function showCartToast(message, withAction = false) {
+    if (!cartToast) return;
+    cartToast.innerHTML = "";
+    const text = document.createElement("span");
+    text.textContent = message;
+    cartToast.appendChild(text);
+    if (withAction && !isCartOpen()) {
+        const action = document.createElement("button");
+        action.type = "button";
+        action.textContent = "VER CARRITO";
+        action.addEventListener("click", openCart);
+        cartToast.appendChild(action);
+    }
+    cartToast.classList.add("show");
+    clearTimeout(cartToastTimer);
+    cartToastTimer = setTimeout(() => cartToast.classList.remove("show"), 3600);
+}
+
+function renderCart() {
+    const units = cartUnits();
+    document.querySelectorAll("[data-cart-count]").forEach(function (el) {
+        el.textContent = units > 99 ? "99+" : String(units);
+        el.classList.toggle("is-empty", units === 0);
+    });
+    document.querySelectorAll(".header-cart, .floating-cart").forEach(el => el.classList.toggle("has-items", units > 0));
+
+    if (!cartBody || !cartFooter) return;
+
+    // Todavía no cargó el catálogo y hay productos guardados.
+    if (!catalogReady && cart.length) {
+        cartBody.innerHTML = '<div class="cart-empty"><p>Cargando tu carrito…</p></div>';
+        cartFooter.hidden = true;
+        return;
+    }
+
+    const lines = getCartLines();
+    if (!lines.length) {
+        cartBody.innerHTML = `
+            <div class="cart-empty">
+                <span class="cart-empty-icon">✦</span>
+                <h3>Tu carrito está vacío</h3>
+                <p>Agregá tus fragancias favoritas y pedilas todas juntas por WhatsApp.</p>
+                <button type="button" class="cart-empty-button" data-action="browse">VER CATÁLOGO</button>
+            </div>`;
+        cartFooter.hidden = true;
+        return;
+    }
+
+    cartBody.innerHTML = lines.map(function (line) {
+        const p = line.perfume;
+        const promo = promoIsActive(p);
+        const image = p.imagen
+            ? `<img src="${escapeHTML(p.imagen)}" alt="${escapeHTML(p.nombre)}" loading="lazy">`
+            : `<span>ELIXIR</span>`;
+        const brand = p.marca && p.marca !== "Sin marca" ? p.marca : "Elixir House";
+        const priceHTML = promo
+            ? `<del>${formatPrice(line.list)}</del> <strong>${formatPrice(line.unit)}</strong> <em>${escapeHTML(p.descuento_porcentaje)}% OFF</em>`
+            : `<strong>${formatPrice(line.unit)}</strong>`;
+        const controls = line.available
+            ? `<div class="cart-qty" role="group" aria-label="Cantidad de ${escapeHTML(p.nombre)}">
+                    <button type="button" data-action="dec" data-id="${escapeHTML(line.id)}" aria-label="Quitar una unidad">−</button>
+                    <span aria-live="polite">${line.qty}</span>
+                    <button type="button" data-action="inc" data-id="${escapeHTML(line.id)}" aria-label="Agregar una unidad">+</button>
+               </div>`
+            : `<p class="cart-item-warning">Sin stock por ahora. No se incluirá en el pedido.</p>`;
+        return `
+            <article class="cart-item${line.available ? "" : " is-unavailable"}">
+                <div class="cart-item-image">${image}</div>
+                <div class="cart-item-info">
+                    <span class="cart-item-brand">${escapeHTML(brand)}</span>
+                    <h3>${escapeHTML(p.nombre)}</h3>
+                    <div class="cart-item-price">${priceHTML}</div>
+                    ${(line.available && p.stock_cantidad !== null && p.stock_cantidad !== undefined && p.stock_cantidad <= LOW_STOCK_LIMIT) ? `<span class="cart-item-low">¡Quedan ${p.stock_cantidad}!</span>` : ""}
+                    ${controls}
+                </div>
+                <div class="cart-item-side">
+                    ${line.available ? `<strong class="cart-line-total">${formatPrice(line.unit * line.qty)}</strong>` : ""}
+                    <button type="button" class="cart-remove" data-action="remove" data-id="${escapeHTML(line.id)}" aria-label="Quitar ${escapeHTML(p.nombre)} del carrito">Quitar</button>
+                </div>
+            </article>`;
+    }).join("");
+
+    const totals = cartTotals(lines);
+    document.getElementById("cartUnits").textContent = String(totals.units);
+    document.getElementById("cartTotal").textContent = formatPrice(totals.total);
+    const savingsRow = document.getElementById("cartSavingsRow");
+    if (savingsRow) {
+        savingsRow.hidden = totals.savings <= 0;
+        document.getElementById("cartSavings").textContent = "− " + formatPrice(totals.savings);
+    }
+    cartFooter.hidden = false;
+    if (cartCheckoutButton) cartCheckoutButton.disabled = totals.units === 0;
+}
+
+function openCart() {
+    if (!cartDrawer) return;
+    cartLastFocus = document.activeElement;
+    cartToast?.classList.remove("show");
+    renderCart();
+    cartDrawer.classList.add("open");
+    cartOverlay?.classList.add("open");
+    cartDrawer.setAttribute("aria-hidden", "false");
+    syncBodyLock();
+    document.getElementById("closeCart")?.focus();
+}
+
+function closeCart() {
+    if (!cartDrawer) return;
+    cartDrawer.classList.remove("open");
+    cartOverlay?.classList.remove("open");
+    cartDrawer.setAttribute("aria-hidden", "true");
+    syncBodyLock();
+    if (cartLastFocus && typeof cartLastFocus.focus === "function") cartLastFocus.focus();
+}
+
+function buildOrderMessage(order) {
+    const items = order.lines.map(function (line, index) {
+        const p = line.perfume;
+        const brand = p.marca && p.marca !== "Sin marca" ? ` (${p.marca})` : "";
+        const promo = promoIsActive(p) ? `  🏷️ ${p.descuento_porcentaje}% OFF` : "";
+        return `${index + 1}. ${p.nombre}${brand}\n   ${line.qty} x ${formatPrice(line.unit)} = ${formatPrice(line.unit * line.qty)}${promo}`;
+    });
+    let message = "Hola Elixir House! 👋\n\nQuiero hacer este pedido:\n\n🛍️ *MI PEDIDO*\n" + items.join("\n");
+    message += `\n\n📦 Productos: ${order.units}`;
+    if (order.savings > 0) message += `\n🏷️ Ahorro por promociones: ${formatPrice(order.savings)}`;
+    message += `\n💰 *TOTAL: ${formatPrice(order.total)}*`;
+    if (order.customer.nombre) message += `\n\n👤 Nombre: ${order.customer.nombre}`;
+    if (order.customer.nota) message += `\n📝 Comentarios: ${order.customer.nota}`;
+    message += "\n\n¿Me pueden confirmar disponibilidad y formas de pago?";
+    return message;
+}
+
+function checkoutCart() {
+    const lines = getCartLines().filter(l => l.available);
+    if (!lines.length) return;
+    const totals = cartTotals(lines);
+    const order = {
+        lines: lines,
+        units: totals.units,
+        total: totals.total,
+        savings: totals.savings,
+        customer: {
+            nombre: (cartNameInput?.value || "").trim(),
+            nota: (cartNoteInput?.value || "").trim()
+        }
+    };
+    openSellerModal(null, true, order);
+}
+
+function saveCartCustomer() {
+    try {
+        localStorage.setItem(CART_CUSTOMER_KEY, JSON.stringify({
+            nombre: cartNameInput?.value || "",
+            nota: cartNoteInput?.value || ""
+        }));
+    } catch (error) { /* sin almacenamiento */ }
+}
+
+(function restoreCartCustomer() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(CART_CUSTOMER_KEY) || "{}");
+        if (cartNameInput && saved.nombre) cartNameInput.value = String(saved.nombre).slice(0, 60);
+        if (cartNoteInput && saved.nota) cartNoteInput.value = String(saved.nota).slice(0, 300);
+        if ((saved.nombre || saved.nota)) document.getElementById("cartCustomer")?.setAttribute("open", "");
+    } catch (error) { /* datos inválidos: se ignoran */ }
+})();
+
+cartNameInput?.addEventListener("input", saveCartCustomer);
+cartNoteInput?.addEventListener("input", saveCartCustomer);
+
+cartBody?.addEventListener("click", function (event) {
+    const target = event.target.closest("[data-action]");
+    if (!target) return;
+    const id = target.dataset.id;
+    const current = cart.find(item => item.id === id);
+    if (target.dataset.action === "inc" && current) setCartQty(id, current.qty + 1);
+    else if (target.dataset.action === "dec" && current) setCartQty(id, current.qty - 1);
+    else if (target.dataset.action === "remove") removeFromCart(id);
+    else if (target.dataset.action === "browse") {
+        closeCart();
+        document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" });
+    }
+});
+
+document.getElementById("headerCartButton")?.addEventListener("click", openCart);
+document.getElementById("floatingCart")?.addEventListener("click", openCart);
+document.getElementById("closeCart")?.addEventListener("click", closeCart);
+cartOverlay?.addEventListener("click", closeCart);
+cartCheckoutButton?.addEventListener("click", checkoutCart);
+document.getElementById("cartClear")?.addEventListener("click", function () {
+    if (cart.length && confirm("¿Querés vaciar el carrito?")) clearCart();
+});
+
+// Mantiene el foco dentro del carrito mientras está abierto.
+cartDrawer?.addEventListener("keydown", function (event) {
+    if (event.key !== "Tab") return;
+    const focusables = [...cartDrawer.querySelectorAll("button:not([disabled]), input, textarea, summary, [tabindex]:not([tabindex='-1'])")]
+        .filter(el => el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
+
+// Si el carrito cambia en otra pestaña, esta se actualiza sola.
+window.addEventListener("storage", function (event) {
+    if (event.key !== CART_KEY) return;
+    cart = loadCartFromStorage();
+    renderCart();
+});
+
+renderCart();
+
+function renderStoreInfo() {
+    const box = document.getElementById("storeInfo");
+    if (!box) return;
+    const entries = [
+        ["HORARIOS", STORE_INFO.horarios],
+        ["MEDIOS DE PAGO", STORE_INFO.pagos],
+        ["ENTREGAS", STORE_INFO.entregas]
+    ].filter(entry => String(entry[1] || "").trim());
+    box.innerHTML = "";
+    box.hidden = entries.length === 0;
+    entries.forEach(function (entry) {
+        const card = document.createElement("div");
+        card.className = "store-info-card";
+        const title = document.createElement("span");
+        title.textContent = entry[0];
+        const text = document.createElement("p");
+        text.textContent = entry[1];
+        card.append(title, text);
+        box.appendChild(card);
+    });
+}
+
+function renderSkeletons(count = 8) {
+    if (!productsGrid) return;
+    productsGrid.innerHTML = Array.from({ length: count }, () =>
+        '<article class="product-card skeleton-card" aria-hidden="true"><div class="skeleton-image"></div><div class="skeleton-lines"><span></span><span></span><span></span></div></article>'
+    ).join("");
+    if (productCount) productCount.textContent = "Cargando catálogo…";
+}
+
+renderStoreInfo();
+renderSkeletons();
 updateFavoritesUI();
 loadVendedores();
 loadPerfumes().then(() => { renderRecentlyViewed(); findGiftIdeas(); });

@@ -1,4 +1,4 @@
-const CACHE_NAME = "elixir-house-v6-promo-fix";
+const CACHE_NAME = "elixir-house-v8-mejoras";
 const APP_SHELL = [
     "./",
     "./index.html",
@@ -6,7 +6,9 @@ const APP_SHELL = [
     "./script.js",
     "./supabase.js",
     "./logo-elixir-house.jpeg",
-    "./manifest.webmanifest"
+    "./manifest.webmanifest",
+    "./icon-192.png",
+    "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
